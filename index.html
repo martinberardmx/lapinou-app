@@ -182,7 +182,7 @@ body{
 </head>
 <body>
 
-<div class="mbar" id="mbar">
+<div class="mbar" id="mbar" style="display:none">
   <button class="mbtn on" onclick="setMode('client')">👤 Cliente</button>
   <button class="mbtn"    onclick="setMode('barista')">☕ Barista</button>
   <button class="mbtn"    onclick="setMode('admin')">⚙️ Admin</button>
@@ -260,7 +260,7 @@ body{
 
   <!-- DROPS -->
   <div class="scroll scr" id="c-drops">
-    <div style="padding:12px 14px 0"><p class="ey" style="margin-bottom:4px">Ediciones limitadas</p><h1 class="serif" style="font-size:24px;color:var(--ch);font-weight:500;line-height:1.1">Drops<br><span style="font-style:italic;color:var(--go)">de la semana</span></h1></div>
+    <div style="padding:11px 14px 0;display:flex;align-items:center;gap:8px"><button onclick="cGo('home')" style="background:none;border:none;cursor:pointer;color:var(--wg);font-size:20px">&#8249;</button><div><p class="ey" style="margin-bottom:4px">Ediciones limitadas</p><h1 class="serif" style="font-size:24px;color:var(--ch);font-weight:500;line-height:1.1">Drops<br><span style="font-style:italic;color:var(--go)">de la semana</span></h1></div>
     <div style="padding:8px 14px 0"><p style="font-size:11px;color:var(--wg);line-height:1.6">Como <strong style="color:var(--ch)" id="c-drops-lv">Conejo Leal</strong> recibes acceso con 1 hora de anticipación.</p></div>
     <div id="c-dropslist" style="padding:11px 0 0"></div>
     <div style="margin:4px 14px 22px;background:var(--iv);border-radius:12px;padding:11px;display:flex;align-items:center;gap:10px"><span style="font-size:16px">🔔</span><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">Alertas de drop</p><p class="ey" style="margin-top:1px">Cantidad + hora límite</p></div><div class="tog" style="background:var(--go)" onclick="togClick(this)"><div class="tth" style="left:21px"></div></div></div>
@@ -313,13 +313,13 @@ body{
       <div style="background:#010101;color:white;border-radius:100px;padding:6px 12px;font-size:9px;letter-spacing:.08em;font-weight:700">SEGUIR</div>
     </div>
     <!-- Facebook -->
-    <div class="socc" onclick="window.open('https://facebook.com/cafelapinou','_blank')">
+    <div class="socc" onclick="window.open('https://www.facebook.com/profile.php?id=100086745348236','_blank')">
       <div class="soci" style="background:#1877F2"><svg width="19" height="19" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></div>
       <div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">Facebook</p><p class="ey" style="margin-top:1px">Café Lapinou</p></div>
       <div style="background:#1877F2;color:white;border-radius:100px;padding:6px 12px;font-size:9px;letter-spacing:.08em;font-weight:700">SEGUIR</div>
     </div>
     <!-- WhatsApp -->
-    <div class="socc" onclick="window.open('https://wa.me/521XXXXXXXXXX','_blank')">
+    <div class="socc" onclick="window.open('https://whatsapp.com/channel/0029VbAnBVCE50UqTppXei2U','_blank')">
       <div class="soci" style="background:#25D366"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></div>
       <div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">WhatsApp</p><p class="ey" style="margin-top:1px">Canal oficial</p></div>
       <div style="background:#25D366;color:white;border-radius:100px;padding:6px 12px;font-size:9px;letter-spacing:.08em;font-weight:700">UNIRSE</div>
@@ -345,6 +345,7 @@ body{
       <div style="margin-bottom:10px"><label class="albl">Nombre completo</label><input class="afield" id="reg-nombre" type="text" placeholder="Ej. Sofia Ramirez" style="font-size:14px"></div>
       <div style="margin-bottom:10px"><label class="albl">Telefono</label><input class="afield" id="reg-tel" type="tel" placeholder="612 123 4567" style="font-size:14px"></div>
       <div style="margin-bottom:14px"><label class="albl">Fecha de cumpleanos</label><input class="afield" id="reg-bday" type="date" style="font-size:14px"></div>
+      <div style="margin-bottom:10px"><label class="albl">Codigo de quien te refirio (opcional)</label><input class="afield" id="reg-ref" type="text" placeholder="Ej. LAP-ABC123" style="font-size:14px;text-transform:uppercase"></div>
       <div id="reg-error" style="display:none;background:rgba(192,57,43,.1);border-radius:9px;padding:9px 11px;margin-bottom:10px"><p style="font-size:11px;color:var(--rd);font-weight:600" id="reg-error-txt"></p></div>
       <button class="bgold" id="reg-btn" onclick="registrarCliente()">Crear mi pasaporte</button>
     </div>
@@ -396,7 +397,7 @@ body{
         <button class="pkey" onclick="bPin('7')">7</button><button class="pkey" onclick="bPin('8')">8</button><button class="pkey" onclick="bPin('9')">9</button>
         <button class="pkey ka" onclick="bPin('clear')">BORRAR</button><button class="pkey" onclick="bPin('0')">0</button><button class="pkey kg" onclick="bPin('ok')">OK</button>
       </div>
-      <p style="text-align:center;font-size:10px;color:var(--wg);margin-top:14px">PIN demo: 1234</p>
+      
     </div>
   </div>
 
@@ -430,6 +431,7 @@ body{
     <div style="margin-bottom:9px"><label style="font-size:9px;text-transform:uppercase;font-weight:600;color:rgba(160,152,144,.8);margin-bottom:4px;display:block">Nombre *</label><input id="breg-nombre" type="text" placeholder="Carlos Mendoza" style="width:100%;background:rgba(248,243,236,.08);border:1px solid rgba(248,243,236,.15);border-radius:8px;padding:9px 10px;color:var(--cr);font-family:'Josefin Sans',sans-serif;font-size:13px;outline:none"></div>
     <div style="margin-bottom:9px"><label style="font-size:9px;text-transform:uppercase;font-weight:600;color:rgba(160,152,144,.8);margin-bottom:4px;display:block">Telefono *</label><input id="breg-tel" type="tel" placeholder="612 123 4567" style="width:100%;background:rgba(248,243,236,.08);border:1px solid rgba(248,243,236,.15);border-radius:8px;padding:9px 10px;color:var(--cr);font-family:'Josefin Sans',sans-serif;font-size:13px;outline:none"></div>
     <div style="margin-bottom:14px"><label style="font-size:9px;text-transform:uppercase;font-weight:600;color:rgba(160,152,144,.8);margin-bottom:4px;display:block">Cumpleanos</label><input id="breg-bday" type="date" style="width:100%;background:rgba(248,243,236,.08);border:1px solid rgba(248,243,236,.15);border-radius:8px;padding:9px 10px;color:var(--cr);font-family:'Josefin Sans',sans-serif;font-size:13px;outline:none"></div>
+    <div style="margin-bottom:9px"><label style="font-size:9px;text-transform:uppercase;font-weight:600;color:rgba(160,152,144,.8);margin-bottom:4px;display:block">Codigo de referido (opcional)</label><input id="breg-ref" type="text" placeholder="Ej. LAP-ABC123" style="width:100%;background:rgba(248,243,236,.08);border:1px solid rgba(248,243,236,.15);border-radius:8px;padding:9px 10px;color:var(--cr);font-family:'Josefin Sans',sans-serif;font-size:12px;outline:none;text-transform:uppercase"></div>
     <div id="breg-error" style="display:none;background:rgba(192,57,43,.15);border-radius:8px;padding:8px 10px;margin-bottom:9px"><p id="breg-error-txt" style="font-size:11px;color:#E57373;font-weight:600"></p></div>
     <button onclick="bCrearCliente()" style="background:var(--go);color:var(--cr);border:none;border-radius:100px;padding:11px;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.1em;font-weight:600;width:100%">Crear pasaporte</button>
   </div>
@@ -452,7 +454,7 @@ body{
         <button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('7')">7</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('8')">8</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('9')">9</button>
         <button class="pkey ka" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('clear')">BORRAR</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('0')">0</button><button class="pkey" style="background:var(--go);color:var(--cr)" onclick="aPin('ok')">OK</button>
       </div>
-      <p style="text-align:center;font-size:10px;color:var(--wg);margin-top:14px">PIN demo: 9999</p>
+      
     </div>
   </div>
 
@@ -508,7 +510,7 @@ body{
     </div>
 
     <!-- TAB MENÚ DEL DÍA -->
-    <div class="scroll ascr" id="at-menu" style="padding-bottom:22px">
+    <div class="scroll ascr" id="at-menu" style="display:none;padding-bottom:22px">
       <div style="padding:10px 14px 8px;display:flex;justify-content:space-between;align-items:center"><p class="ey">Platillos y bebidas del día</p><button onclick="addMenuItem()" style="background:var(--iv);border:none;border-radius:100px;padding:5px 11px;font-family:'Josefin Sans',sans-serif;font-size:10px;color:var(--ch);letter-spacing:.08em;font-weight:600;cursor:pointer">+ AGREGAR</button></div>
       <div id="a-menu-forms" style="padding:0 14px"></div>
       <div style="padding:0 14px 0"><button class="bgold" id="a-save-menu" onclick="saveMenu()">Publicar menú del día</button></div>
@@ -516,21 +518,21 @@ body{
     </div>
 
     <!-- TAB DROPS -->
-    <div class="scroll ascr" id="at-drops" style="padding-bottom:22px">
+    <div class="scroll ascr" id="at-drops" style="display:none;padding-bottom:22px">
       <div style="padding:10px 14px 7px;display:flex;justify-content:space-between;align-items:center"><p class="ey">Croissants geométricos</p><button onclick="addDrop()" style="background:var(--iv);border:none;border-radius:100px;padding:5px 11px;font-family:'Josefin Sans',sans-serif;font-size:10px;color:var(--ch);letter-spacing:.08em;font-weight:600;cursor:pointer">+ AGREGAR</button></div>
       <div id="a-dforms" style="padding:0 14px"></div>
       <div style="padding:0 14px"><button class="bgold" id="a-save-drops" onclick="saveDrops()">Guardar drops</button></div>
     </div>
 
     <!-- TAB CARTA -->
-    <div class="scroll ascr" id="at-carta" style="padding-bottom:22px">
+    <div class="scroll ascr" id="at-carta" style="display:none;padding-bottom:22px">
       <div style="padding:10px 14px 8px;display:flex;justify-content:space-between;align-items:center"><p class="ey">Categorías y precios</p><button onclick="addCartaItem()" style="background:var(--iv);border:none;border-radius:100px;padding:5px 11px;font-family:'Josefin Sans',sans-serif;font-size:10px;color:var(--ch);letter-spacing:.08em;font-weight:600;cursor:pointer">+ ITEM</button></div>
       <div id="a-carta-forms" style="padding:0 14px"></div>
       <div style="padding:0 14px"><button class="bgold" id="a-save-carta" onclick="saveCarta()">Guardar carta</button></div>
     </div>
 
     <!-- TAB ALERTAS -->
-    <div class="scroll ascr" id="at-notifs" style="padding-bottom:22px">
+    <div class="scroll ascr" id="at-notifs" style="display:none;padding-bottom:22px">
       <div style="padding:10px 14px 0">
         <p class="ey" style="margin-bottom:7px">Vista previa</p>
         <div style="background:var(--ch);border-radius:12px;padding:11px;display:flex;align-items:flex-start;gap:9px;margin-bottom:10px"><div style="width:30px;height:30px;background:rgba(138,106,48,.2);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px" id="a-prev-ico">⬛</div><div style="flex:1"><p id="a-prev-txt" style="font-size:11px;color:var(--cr);font-weight:600;line-height:1.4">—</p><p class="ey" style="color:var(--wl);margin-top:2px">Toca para reservar</p></div></div>
@@ -547,7 +549,7 @@ body{
     </div>
 
     <!-- TAB STATS -->
-    <div class="scroll ascr" id="at-stats" style="padding-bottom:22px">
+    <div class="scroll ascr" id="at-stats" style="display:none;padding-bottom:22px">
       <div style="padding:10px 14px 0">
         <p class="ey" style="margin-bottom:8px">Esta semana</p>
         <div style="display:flex;gap:7px;margin-bottom:10px">
@@ -970,7 +972,7 @@ function updateRT(){
 }
 function toggleRT(i){ST.rtActive.has(i)?ST.rtActive.delete(i):ST.rtActive.add(i);updateRT();}
 function copyReview(){navigator.clipboard?.writeText(document.getElementById('c-rtxt')?.textContent||'').catch(()=>{});cToast('¡Texto copiado! Pégalo en Google 📋');}
-function openGoogle(){window.open('https://maps.google.com/search/Café+Lapinou','_blank');}
+function openGoogle(){window.open('https://maps.app.goo.gl/AMdm4zACYB2BgHJg8','_blank');}
 
 // ══════════════════════════════════════════
 //  REFERIDOS
@@ -1172,11 +1174,6 @@ function aCheck(){
     document.getElementById('a-pin').style.display='none';
     const m=document.getElementById('a-main');
     m.style.display='flex';
-    // Ocultar todos los tabs primero
-    ['hoy','menu','drops','carta','notifs','stats','planeta'].forEach(id=>{
-      const el=document.getElementById('at-'+id);
-      if(el)el.style.display='none';
-    });
     aTab('hoy');
   } else {
     const d=document.getElementById('a-dots');
@@ -1186,8 +1183,9 @@ function aCheck(){
 }
 function aLock(){
   AS.pin='';aDots();
-  document.getElementById('a-main').classList.remove('on');document.getElementById('a-main').style.display='none';
-  const pin=document.getElementById('a-pin');pin.style.display='flex';setTimeout(()=>pin.classList.add('on'),10);
+  document.getElementById('a-main').style.display='none';
+  const pin=document.getElementById('a-pin');
+  pin.style.display='flex';pin.style.flexDirection='column';
 }
 function aTab(t){
   ['hoy','menu','drops','carta','notifs','stats','planeta'].forEach(id=>{
