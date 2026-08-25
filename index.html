@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1E1C19">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lapinou">
+<link rel="manifest" id="pwa-manifest">
+<title>Café Lapinou</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--cr:#F8F3EC;--iv:#EDE6D9;--go:#8A6A30;--gl:#B8922A;--ch:#1E1C19;--wg:#55504A;--wl:#A09890;--wh:#FFFFFF;--gn:#2E7D52;--rd:#C0392B;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#2C2825;min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Josefin Sans',sans-serif;padding:12px 0 28px;gap:10px;}
+.mbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.mbtn{padding:6px 14px;border-radius:100px;border:1.5px solid rgba(160,152,144,.3);background:transparent;color:#A09890;font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all .2s}
+.mbtn.on{background:#F8F3EC;color:#1E1C19;border-color:#F8F3EC}
+.phone{width:min(375px,100vw);height:min(780px,calc(100vh - 88px));border-radius:clamp(0px,4vw,42px);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 26px 68px rgba(0,0,0,.6);position:relative}
+.ph-c{background:var(--cr)}.ph-b{background:var(--ch)}.ph-a{background:#F0EBE3}
+.sbar{display:flex;justify-content:space-between;align-items:center;padding:11px 20px 0;font-size:11px;font-weight:600;letter-spacing:.04em;flex-shrink:0}
+.sl{color:var(--ch)}.sd{color:var(--cr)}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden}.scroll::-webkit-scrollbar{display:none}
+.bnav{display:flex;justify-content:space-around;padding:7px 0 16px;background:var(--wh);border-top:1px solid var(--iv);flex-shrink:0}
+.nbtn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:3px 7px}
+.nlbl{font-size:8px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;transition:color .15s}
+.scr{display:none}.scr.on{display:block}
+.serif{font-family:'Cormorant Garamond',serif}
+.ey{font-size:9px;letter-spacing:.15em;text-transform:uppercase;font-weight:600;color:var(--wl)}
+.card{background:var(--wh);border-radius:14px;padding:13px}
+.card-iv{background:var(--iv);border-radius:14px;padding:13px}
+.shdr{display:flex;justify-content:space-between;align-items:center;padding:14px 14px 6px}
+.stamp{aspect-ratio:1;border-radius:50%;border:1.5px solid rgba(237,230,217,.25);display:flex;align-items:center;justify-content:center;background:#EDE6D9;cursor:pointer;transition:transform .1s;}
+.stamp:active{transform:scale(.88)}
+.stamp.full{border-color:var(--go);background:#B8922A}
+@keyframes stmp{0%{transform:scale(1.45);opacity:0}60%{transform:scale(.92)}100%{transform:scale(1);opacity:1}}
+.stamp.pop{animation:stmp .38s cubic-bezier(.34,1.56,.64,1)}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
+.pcard{background:var(--ch);border-radius:18px;padding:15px;margin:10px 14px 0;position:relative;overflow:hidden}
+.pwm{position:absolute;right:-6px;top:-6px;opacity:.07;pointer-events:none}
+.lvpill{display:inline-flex;align-items:center;gap:4px;background:rgba(138,106,48,.2);border:1px solid rgba(184,146,42,.3);border-radius:100px;padding:3px 9px;font-size:9px;color:var(--gl);letter-spacing:.08em;font-weight:600}
+.pbar{height:3px;background:rgba(237,230,217,.1);border-radius:100px;overflow:hidden;margin-top:8px}
+.pfill{height:100%;border-radius:100px;background:var(--go);transition:width .5s cubic-bezier(.4,0,.2,1)}
+.nbanner{margin:9px 14px 7px;background:var(--ch);border-radius:12px;padding:11px;display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.live{display:inline-flex;align-items:center;gap:4px;background:var(--ch);color:var(--cr);border-radius:100px;padding:4px 9px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.dot{width:5px;height:5px;border-radius:50%;background:#4CAF50;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.dcard{margin:0 14px 9px;border-radius:14px;overflow:hidden;cursor:pointer}
+.din{padding:13px;display:flex;justify-content:space-between;align-items:flex-end;min-height:94px}
+.fcard{margin:0 14px 8px;border-radius:12px;overflow:hidden}
+.sold-b{display:inline-flex;align-items:center;background:rgba(192,57,43,.12);color:var(--rd);border-radius:100px;padding:3px 8px;font-size:9px;letter-spacing:.07em;font-weight:600}
+.new-b{display:inline-flex;align-items:center;background:rgba(46,125,82,.12);color:var(--gn);border-radius:100px;padding:3px 8px;font-size:9px;letter-spacing:.07em;font-weight:600}
+.socc{display:flex;align-items:center;gap:11px;background:var(--wh);border-radius:13px;padding:11px;margin:0 14px 8px;cursor:pointer;transition:transform .15s}
+.socc:active{transform:scale(.97)}
+.soci{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cat-header{background:var(--ch);padding:9px 13px;margin:5px 14px;border-radius:10px}
+.carta-item{display:flex;justify-content:space-between;align-items:baseline;padding:8px 14px;border-bottom:1px solid var(--iv)}
+.carta-item:last-child{border-bottom:none}
+.tog{width:38px;height:22px;border-radius:100px;position:relative;cursor:pointer;flex-shrink:0;transition:background .2s}
+.tth{width:16px;height:16px;background:var(--wh);border-radius:50%;position:absolute;top:3px;transition:left .2s}
+.ppill{display:inline-block;border-radius:100px;padding:6px 10px;margin:2px;font-size:10px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;border:1.5px solid var(--iv);background:var(--wh);color:var(--wg);cursor:pointer;transition:all .18s}
+.ppill.on{background:var(--ch);color:var(--cr);border-color:var(--ch)}
+.bgold{background:var(--go);color:var(--cr);border:none;border-radius:100px;padding:11px 18px;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;width:100%;transition:background .2s}
+.bdark{background:var(--ch);color:var(--cr);border:none;border-radius:100px;padding:10px 18px;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;width:100%}
+.biv{background:var(--iv);border:none;border-radius:100px;padding:10px 18px;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.1em;font-weight:600;width:100%;color:var(--ch)}
+.bsm{background:var(--cr);border:none;border-radius:100px;padding:6px 11px;font-family:'Josefin Sans',sans-serif;font-size:9px;letter-spacing:.08em;font-weight:700;cursor:pointer}
+.toast{position:absolute;bottom:72px;left:13px;right:13px;background:var(--ch);color:var(--cr);border-radius:10px;padding:10px 12px;font-size:12px;display:flex;align-items:center;gap:8px;z-index:200;pointer-events:none;animation:tup .3s ease}
+@keyframes tup{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast.out{animation:tdn .3s ease forwards}
+@keyframes tdn{to{transform:translateY(-8px);opacity:0}}
+.lvup{position:absolute;inset:0;background:rgba(30,28,25,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:300;padding:24px;text-align:center;animation:fi .4s ease}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.rstat{flex:1;text-align:center;padding:11px 0}
+.rstat+.rstat{border-left:1px solid rgba(237,230,217,.12)}
+.pwa-banner{margin:0 14px 9px;background:linear-gradient(135deg,var(--go),var(--gl));border-radius:13px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.pwa-banner.hidden{display:none}
+.pin-wrap{flex:1;overflow-y:auto;display:flex;flex-direction:column;justify-content:center;padding:14px 0}
+.pin-dots{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
+.pd{width:13px;height:13px;border-radius:50%;border:2px solid var(--go);transition:background .15s}
+.pd.on{background:var(--go)}
+.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 22px}
+.pkey{aspect-ratio:1;border-radius:50%;background:rgba(248,243,236,.07);border:none;color:var(--cr);font-family:'Josefin Sans',sans-serif;font-size:19px;font-weight:400;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center}
+.pkey:active{background:rgba(138,106,48,.35)}
+.pkey.kg{background:var(--go)}
+.pkey.ka{font-size:10px;letter-spacing:.04em}
+.scanbox{width:172px;height:172px;border-radius:15px;border:2px solid var(--go);margin:9px auto;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:rgba(138,106,48,.05);cursor:pointer}
+.scanline{position:absolute;left:0;right:0;height:2px;background:var(--go);opacity:.7;animation:sc 2s linear infinite}
+@keyframes sc{0%{top:0}100%{top:172px}}
+.scanbox::before,.scanbox::after{content:'';position:absolute;width:15px;height:15px;border-color:var(--gl);border-style:solid}
+.scanbox::before{top:7px;left:7px;border-width:2.5px 0 0 2.5px}
+.scanbox::after{bottom:7px;right:7px;border-width:0 2.5px 2.5px 0}
+.srow{display:flex;align-items:center;gap:9px;padding:9px 13px;border-bottom:1px solid rgba(237,230,217,.07)}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.bscr{display:none}.bscr.on{display:flex;flex-direction:column}
+.ascr{display:none;flex:1;overflow-y:auto;overflow-x:hidden}.ascr.on{display:flex;flex-direction:column}
+.ascr::-webkit-scrollbar{display:none}
+.ascr-flex{display:none}.ascr-flex.on{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.atabs{display:flex;background:var(--wh);border-bottom:1px solid var(--iv);flex-shrink:0;overflow-x:auto}
+.atabs::-webkit-scrollbar{display:none}
+.atab{flex-shrink:0;padding:9px 11px;background:none;border:none;border-bottom:2px solid transparent;font-family:'Josefin Sans',sans-serif;font-size:9px;letter-spacing:.09em;text-transform:uppercase;font-weight:600;color:var(--wl);cursor:pointer;transition:all .2s;white-space:nowrap}
+.atab.on{color:var(--go);border-bottom-color:var(--go)}
+.afield{width:100%;background:var(--wh);border:1.5px solid var(--iv);border-radius:9px;padding:8px 10px;font-family:'Josefin Sans',sans-serif;font-size:13px;color:var(--ch);outline:none;transition:border-color .2s}
+.afield:focus{border-color:var(--go)}
+.afield::placeholder{color:var(--wl)}
+.albl{font-size:9px;letter-spacing:.13em;text-transform:uppercase;font-weight:600;color:var(--wg);margin-bottom:4px;display:block}
+.acard{background:var(--wh);border-radius:14px;padding:14px;margin:0 13px 9px}
+.trow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--iv)}
+.trow:last-child{border-bottom:none}
+.iform{background:var(--iv);border-radius:11px;padding:11px;margin-bottom:7px;position:relative}
+.irm{position:absolute;top:8px;right:8px;background:rgba(192,57,43,.15);border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;color:var(--rd);font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.schip{background:var(--iv);border-radius:9px;padding:8px 9px;text-align:center;flex:1}
+.pbar-w{height:4px;background:var(--iv);border-radius:100px;overflow:hidden;margin-top:3px}
+.pbar-f{height:100%;border-radius:100px}
+.a-toast{position:absolute;top:96px;left:13px;right:13px;background:var(--gn);color:var(--wh);border-radius:9px;padding:9px 12px;font-size:12px;font-weight:600;letter-spacing:.04em;z-index:400;text-align:center;transition:opacity .3s;display:none}
+.fb-pill{display:inline-flex;align-items:center;gap:4px;border-radius:100px;padding:3px 8px;font-size:9px;letter-spacing:.07em;font-weight:600;margin-bottom:6px}
+.fb-pill.ok{background:rgba(46,125,82,.15);color:var(--gn)}
+.fb-pill.err{background:rgba(192,57,43,.15);color:var(--rd)}
+.fb-pill.load{background:rgba(138,106,48,.15);color:var(--go)}
+.fb-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.add-btn{display:flex;align-items:center;gap:6px;background:none;border:1.5px dashed rgba(138,106,48,.4);border-radius:10px;width:100%;padding:9px;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-size:11px;color:var(--go);letter-spacing:.06em;font-weight:600;justify-content:center;transition:background .2s}
+.add-btn:hover{background:rgba(138,106,48,.06)}
+.atab-content{display:block;padding-bottom:20px}
+.cat-badge{display:inline-flex;align-items:center;background:rgba(138,106,48,.12);border-radius:100px;padding:3px 9px;font-size:10px;color:var(--go);letter-spacing:.07em;font-weight:600;margin-bottom:5px}
+</style>
+</head>
+<body>
+<div class="mbar">
+  <button class="mbtn on" onclick="setMode('client')">👤 Cliente</button>
+  <button class="mbtn"    onclick="setMode('barista')">☕ Barista</button>
+  <button class="mbtn"    onclick="setMode('admin')">⚙️ Admin</button>
+</div>
+
+<!-- CONEJO LAPINOU SVG symbol -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="lapinou" viewBox="0 0 100 120">
+    <image href="data:image/png;base64,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" width="100" height="120"/>
+  </symbol>
+</svg>
+
+
+<!-- ══ CLIENT ══ -->
+<div class="phone ph-c" id="ph-client">
+  <div class="sbar sl"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><svg width="14" height="10" viewBox="0 0 15 11" fill="#1E1C19"><rect x="0" y="2" width="2.5" height="9" rx="1"/><rect x="4" y="1" width="2.5" height="10" rx="1"/><rect x="8" y="0" width="2.5" height="11" rx="1"/><rect x="12" y="1" width="2.5" height="10" rx="1" opacity=".25"/></svg><svg width="21" height="10" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke="#1E1C19" stroke-opacity=".35"/><rect x="1.5" y="1.5" width="16" height="9" rx="2.5" fill="#1E1C19"/></svg></div></div>
+
+  <!-- HOME -->
+  <div class="scroll scr on" id="c-home">
+    <!-- PWA banner -->
+    <div class="pwa-banner" id="pwa-banner" onclick="pwaTrigger()">
+      <div style="width:34px;height:34px;background:rgba(248,243,236,.2);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="22" viewBox="0 0 100 120" style="color:white"><use href="#lapinou"/></svg></div>
+      <div style="flex:1"><p style="font-size:12px;color:var(--cr);font-weight:600;line-height:1.3">Instala la app en tu celular</p><p class="ey" style="color:rgba(248,243,236,.7);margin-top:2px">Acceso directo desde tu pantalla</p></div>
+      <div style="background:rgba(248,243,236,.25);border-radius:100px;padding:6px 11px;font-family:'Josefin Sans',sans-serif;font-size:9px;color:var(--cr);letter-spacing:.08em;font-weight:700;flex-shrink:0">INSTALAR</div>
+    </div>
+    <!-- Notif -->
+    <div class="nbanner" id="c-nbanner" onclick="cGo('drops')"><div id="c-nb-ico" style="width:28px;height:28px;background:rgba(138,106,48,.2);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px">⬛</div><div style="flex:1"><p id="c-nb-txt" style="font-size:11px;color:var(--cr);font-weight:600;line-height:1.4">Cargando…</p><p class="ey" style="color:var(--wl);margin-top:2px">Toca para reservar</p></div><span style="color:var(--gl);font-size:14px;flex-shrink:0">›</span></div>
+    <div style="padding:0 14px 0"><p class="ey" style="margin-bottom:3px">Buenos días</p><h1 class="serif" style="font-size:25px;color:var(--ch);font-weight:500;line-height:1.1">Bienvenida,<br><span style="font-style:italic;color:var(--go)">Sofía</span></h1></div>
+    <!-- Passport -->
+    <div class="pcard">
+      <div class="pwm"><img src=""data:image/png;base64,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" width="80" height="96" style="opacity:.12"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><p class="ey" style="color:rgba(160,152,144,.8);margin-bottom:2px">Tu pasaporte</p><p class="serif" style="color:var(--cr);font-size:14px;font-weight:500" id="c-lvname">Conejo Casual</p></div><div class="lvpill" id="c-lvpill">NIVEL 1</div></div>
+      <div class="sgrid" id="c-sgrid"></div>
+      <div class="pbar"><div class="pfill" id="c-pfill"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:10px;color:rgba(160,152,144,.7)" id="c-sleft"></span><span style="font-size:10px;color:var(--gl)" id="c-sright"></span></div>
+      <div style="margin-top:7px;background:rgba(138,106,48,.1);border-radius:8px;padding:7px 9px;display:flex;align-items:center;gap:6px"><span style="font-size:12px">🎁</span><p style="font-size:10px;color:rgba(184,146,42,.9);line-height:1.4">Visita 8: <strong>bebida del mes gratis</strong> · Sube de nivel para más beneficios</p></div>
+    </div>
+    <div style="padding:9px 14px 0"><button class="bdark" onclick="cGo('qr')" style="display:flex;align-items:center;justify-content:center;gap:7px;padding:9px;font-size:10px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3"/></svg>Mostrar QR en caja</button></div>
+    <div class="shdr" style="padding-bottom:5px"><h2 class="serif" style="font-size:15px;color:var(--ch);font-weight:500">Menú del día</h2><span class="ey" id="c-fecha"></span></div>
+    <div id="c-menuhoy"></div>
+    <div class="shdr" style="padding-bottom:5px"><h2 class="serif" style="font-size:15px;color:var(--ch);font-weight:500">Hoy en Lapinou</h2></div>
+    <div id="c-feed"></div>
+    <div class="shdr" style="padding-bottom:5px"><h2 class="serif" style="font-size:15px;color:var(--ch);font-weight:500">Drop de hoy</h2><div class="live"><span class="dot"></span>En vivo</div></div>
+    <div id="c-dropmain"></div>
+    <div class="shdr" style="padding-bottom:5px"><h2 class="serif" style="font-size:15px;color:var(--ch);font-weight:500">Más</h2></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px 18px">
+      <div class="card" style="cursor:pointer" onclick="cGo('review')"><span style="font-size:18px">⭐</span><p style="font-size:11px;color:var(--ch);font-weight:600;margin-top:6px">Reseña Google</p><p class="ey" style="margin-top:1px">2 min · café gratis</p></div>
+      <div class="card" style="cursor:pointer" onclick="cGo('referral')"><span style="font-size:18px">🐰</span><p style="font-size:11px;color:var(--ch);font-weight:600;margin-top:6px">Referir amigos</p><p class="ey" style="margin-top:1px" id="c-refq">3 amigos · 3 ganados</p></div>
+      <div class="card" style="cursor:pointer" onclick="cGo('social')"><span style="font-size:18px">📲</span><p style="font-size:11px;color:var(--ch);font-weight:600;margin-top:6px">Síguenos</p><p class="ey" style="margin-top:1px">Redes sociales</p></div>
+      <div class="card" style="cursor:pointer"><span style="font-size:18px">📍</span><p style="font-size:11px;color:var(--ch);font-weight:600;margin-top:6px">Mi mesa</p><p class="ey" style="margin-top:1px">Avisa que llegas</p></div>
+      <div class="card" style="cursor:pointer;grid-column:span 2;display:flex;align-items:center;gap:10px;padding:11px 13px" onclick="cGo('planeta')">
+        <span style="font-size:22px">🌿</span>
+        <div><p style="font-size:11px;color:var(--ch);font-weight:600">Huella Lapinou</p><p class="ey" style="margin-top:1px">1% for the Planet · Naturalia · acciones diarias</p></div>
+        <span style="color:var(--wl);margin-left:auto;font-size:16px">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR -->
+  <div class="scroll scr" id="c-qr">
+    <div style="padding:11px 14px 0;display:flex;align-items:center;gap:8px"><button onclick="cGo('home')" style="background:none;border:none;cursor:pointer;color:var(--wg);font-size:20px">‹</button><div><p class="ey" style="margin-bottom:2px">Muéstralo al barista</p><h1 class="serif" style="font-size:21px;color:var(--ch);font-weight:500">Tu QR</h1></div></div>
+    <div style="margin:10px 14px;background:var(--ch);border-radius:18px;padding:18px;text-align:center"><div id="qrbox" style="display:flex;justify-content:center;margin-bottom:10px"></div><p class="serif" style="color:var(--cr);font-size:15px;font-weight:500">Sofía Ramírez</p><p class="ey" style="color:var(--wl);margin-top:2px">LAP-2024-0042</p><div class="lvpill" id="c-qrpill" style="margin-top:7px;display:inline-flex">CONEJO CASUAL</div></div>
+    <div style="margin:0 14px 9px"><div class="card-iv" style="text-align:center"><p style="font-size:11px;color:var(--wg);line-height:1.6">El barista escanea este QR desde la <strong style="color:var(--ch)">tablet de caja</strong>. Tu sello se registra al instante.</p></div></div>
+    <div style="padding:0 14px 20px"><div style="display:flex;justify-content:space-between;align-items:center;background:var(--wh);border-radius:12px;padding:10px 12px"><div><p style="font-size:11px;color:var(--ch);font-weight:600">Visitas totales</p><p class="ey" style="margin-top:1px">Historial</p></div><p class="serif" style="font-size:24px;color:var(--go);font-weight:500" id="c-qrvc">23</p></div></div>
+  </div>
+
+  <!-- CARTA -->
+  <div class="scroll scr" id="c-carta">
+    <div style="padding:11px 14px 0;display:flex;align-items:center;gap:8px"><button onclick="cGo('home')" style="background:none;border:none;cursor:pointer;color:var(--wg);font-size:20px">‹</button><div><p class="ey" style="margin-bottom:2px">Precios actualizados</p><h1 class="serif" style="font-size:21px;color:var(--ch);font-weight:500">Nuestra carta</h1></div></div>
+    <div id="c-carta-body"></div>
+    <div style="padding:4px 14px 20px;text-align:center"><p style="font-size:10px;color:var(--wl);line-height:1.6">Precios en MXN · IVA incluido</p></div>
+  </div>
+
+  <!-- DROPS -->
+  <div class="scroll scr" id="c-drops">
+    <div style="padding:11px 14px 0"><p class="ey" style="margin-bottom:3px">Ediciones limitadas</p><h1 class="serif" style="font-size:23px;color:var(--ch);font-weight:500;line-height:1.1">Drops<br><span style="font-style:italic;color:var(--go)">de la semana</span></h1></div>
+    <div style="padding:7px 14px 0"><p style="font-size:11px;color:var(--wg);line-height:1.6">Como <strong style="color:var(--ch)" id="c-drops-lv">Conejo Leal</strong> recibes acceso con 1 hora de anticipación.</p></div>
+    <div id="c-dropslist" style="padding:10px 0 0"></div>
+    <div style="margin:4px 14px 20px;background:var(--iv);border-radius:12px;padding:10px;display:flex;align-items:center;gap:9px"><span style="font-size:15px">🔔</span><div style="flex:1"><p style="font-size:11px;color:var(--ch);font-weight:600">Alertas de drop</p><p class="ey" style="margin-top:1px">Cantidad + hora límite</p></div><div class="tog" style="background:var(--go)" onclick="togClick(this)"><div class="tth" style="left:19px"></div></div></div>
+  </div>
+
+  <!-- RESEÑA -->
+  <div class="scroll scr" id="c-review">
+    <div style="padding:11px 14px 0;display:flex;align-items:center;gap:8px"><button onclick="cGo('home')" style="background:none;border:none;cursor:pointer;color:var(--wg);font-size:20px">‹</button><div><p class="ey" style="margin-bottom:2px">Ayúdanos a crecer</p><h1 class="serif" style="font-size:21px;color:var(--ch);font-weight:500">Tu reseña</h1></div></div>
+    <div style="margin:9px 14px 0;background:var(--wh);border-radius:14px;padding:14px;text-align:center"><div style="font-size:19px;color:#F4B942;letter-spacing:3px">★★★★★</div><p class="serif" style="font-size:17px;color:var(--ch);font-weight:500;margin-top:6px">¿Cómo estuvo tu visita?</p><p style="font-size:11px;color:var(--wg);margin-top:3px;line-height:1.5">Elige temas y te generamos un texto de arranque.</p></div>
+    <div style="margin:8px 14px 0"><p class="ey" style="margin-bottom:5px">Temas</p><div id="c-rtpills"></div></div>
+    <div style="margin:8px 14px 0"><p class="ey" style="margin-bottom:5px">Texto de arranque</p><div style="background:var(--wh);border-radius:11px;padding:11px"><p id="c-rtxt" style="font-size:12px;color:var(--ch);line-height:1.75;font-style:italic"></p><button onclick="copyReview()" style="margin-top:9px;background:var(--iv);border:none;border-radius:100px;padding:7px 14px;font-family:'Josefin Sans',sans-serif;font-size:10px;color:var(--ch);letter-spacing:.1em;font-weight:600;cursor:pointer;width:100%">COPIAR TEXTO</button></div></div>
+    <div style="margin:8px 14px 0"><div style="background:var(--ch);border-radius:12px;padding:11px;display:flex;align-items:center;gap:9px"><span style="font-size:18px">🎁</span><div><p style="font-size:12px;color:var(--cr);font-weight:600">Reseña verificada</p><p style="font-size:11px;color:rgba(160,152,144,.8);margin-top:2px;line-height:1.4">Muéstrala en caja → café de cortesía en tu siguiente visita.</p></div></div></div>
+    <div style="padding:9px 14px 22px"><button class="bgold" onclick="openGoogle()" style="display:flex;align-items:center;justify-content:center;gap:7px"><svg width="13" height="13" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>Escribir reseña en Google</button></div>
+  </div>
+
+  <!-- REFERIDOS -->
+  <div class="scroll scr" id="c-referral">
+    <div style="padding:11px 14px 0;display:flex;align-items:center;gap:8px"><button onclick="cGo('home')" style="background:none;border:none;cursor:pointer;color:var(--wg);font-size:20px">‹</button><div><p class="ey" style="margin-bottom:2px">Comparte Lapinou</p><h1 class="serif" style="font-size:21px;color:var(--ch);font-weight:500">Referir amigos</h1></div></div>
+    <div style="margin:10px 14px 0;background:var(--ch);border-radius:15px;overflow:hidden">
+      <div style="padding:12px;border-bottom:1px solid rgba(237,230,217,.08)"><p class="ey" style="color:var(--wl);margin-bottom:3px">Tu código</p><div style="display:flex;justify-content:space-between;align-items:center"><p class="serif" style="font-size:25px;color:var(--gl);font-weight:600;letter-spacing:.1em">SOFIA22</p><button onclick="copyCode()" style="background:var(--go);color:var(--cr);border:none;border-radius:100px;padding:6px 13px;font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:.1em;font-weight:600;cursor:pointer">COPIAR</button></div></div>
+      <div style="display:flex"><div class="rstat"><p class="serif" style="font-size:25px;color:var(--cr);font-weight:500" id="c-rcount">3</p><p class="ey" style="color:var(--wl);margin-top:1px">Referidos</p></div><div class="rstat"><p class="serif" style="font-size:25px;color:var(--gl);font-weight:500" id="c-crcount">3</p><p class="ey" style="color:var(--wl);margin-top:1px">Croissants</p></div><div class="rstat"><p class="serif" style="font-size:25px;color:var(--cr);font-weight:500">1</p><p class="ey" style="color:var(--wl);margin-top:1px">Pendiente</p></div></div>
+    </div>
+    <div style="padding:12px 14px 5px"><p class="ey">Tus amigos</p></div>
+    <div id="c-friends" style="padding:0 14px"></div>
+    <div style="padding:8px 14px 0"><button class="bgold" onclick="addRef()">+ Simular nuevo referido</button></div>
+    <div style="margin:9px 14px 20px"><div class="card-iv"><p class="ey" style="margin-bottom:7px">Cómo funciona</p><div style="display:flex;flex-direction:column;gap:7px"><div style="display:flex;gap:7px;align-items:flex-start"><div style="width:19px;height:19px;border-radius:50%;background:var(--go);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--cr);font-weight:700;flex-shrink:0">1</div><p style="font-size:11px;color:var(--wg);line-height:1.5">Comparte tu código <strong style="color:var(--ch)">SOFIA22</strong></p></div><div style="display:flex;gap:7px;align-items:flex-start"><div style="width:19px;height:19px;border-radius:50%;background:var(--go);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--cr);font-weight:700;flex-shrink:0">2</div><p style="font-size:11px;color:var(--wg);line-height:1.5">Tu amigo lo usa al registrarse</p></div><div style="display:flex;gap:7px;align-items:flex-start"><div style="width:19px;height:19px;border-radius:50%;background:var(--go);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--cr);font-weight:700;flex-shrink:0">3</div><p style="font-size:11px;color:var(--wg);line-height:1.5">Ambos reciben un <strong style="color:var(--ch)">croissant gratis</strong></p></div></div></div></div>
+  </div>
+
+  <!-- SOCIAL -->
+  <div class="scroll scr" id="c-social">
+    <div style="padding:11px 14px 0;display:flex;align-items:center;gap:8px"><button onclick="cGo('home')" style="background:none;border:none;cursor:pointer;color:var(--wg);font-size:20px">‹</button><div><p class="ey" style="margin-bottom:2px">Únete</p><h1 class="serif" style="font-size:21px;color:var(--ch);font-weight:500">Síguenos</h1></div></div>
+    <div style="padding:7px 14px 9px"><p style="font-size:11px;color:var(--wg);line-height:1.6">Drops en exclusiva y nuevos productos antes que nadie.</p></div>
+    <div class="socc" onclick="window.open('https://instagram.com/cafelapinou','_blank')"><div class="soci" style="background:linear-gradient(135deg,#f09433,#dc2743,#bc1888)"><svg width="19" height="19" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></div><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">Instagram</p><p class="ey" style="margin-top:1px">@cafelapinou</p></div><div style="background:linear-gradient(135deg,#f09433,#dc2743);color:white;border-radius:100px;padding:6px 11px;font-size:9px;letter-spacing:.07em;font-weight:700">SEGUIR</div></div>
+    <div class="socc" onclick="window.open('https://tiktok.com/@cafelapinou','_blank')"><div class="soci" style="background:#010101"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.73a4.85 4.85 0 0 1-1.01-.04z"/></svg></div><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">TikTok</p><p class="ey" style="margin-top:1px">@cafelapinou</p></div><div style="background:#010101;color:white;border-radius:100px;padding:6px 11px;font-size:9px;letter-spacing:.07em;font-weight:700">SEGUIR</div></div>
+    <div class="socc" onclick="window.open('https://facebook.com/cafelapinou','_blank')"><div class="soci" style="background:#1877F2"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></div><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">Facebook</p><p class="ey" style="margin-top:1px">Café Lapinou</p></div><div style="background:#1877F2;color:white;border-radius:100px;padding:6px 11px;font-size:9px;letter-spacing:.07em;font-weight:700">SEGUIR</div></div>
+    <div class="socc" onclick="window.open('https://wa.me/521XXXXXXXXXX','_blank')"><div class="soci" style="background:#25D366"><svg width="19" height="19" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg></div><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">WhatsApp</p><p class="ey" style="margin-top:1px">Canal oficial</p></div><div style="background:#25D366;color:white;border-radius:100px;padding:6px 11px;font-size:9px;letter-spacing:.07em;font-weight:700">UNIRSE</div></div>
+    <div style="padding:9px 14px 20px"><div class="card-iv" style="text-align:center"><p class="serif" style="font-size:16px;color:var(--ch);font-weight:500;margin-bottom:4px">¡Etiquétanos!</p><p style="font-size:11px;color:var(--wg);line-height:1.5;margin-bottom:9px">Usa <strong style="color:var(--ch)">#CafeLapinou</strong> y aparece en nuestra historia semanal.</p><button class="bgold" style="padding:10px" onclick="window.open('https://instagram.com/cafelapinou','_blank')">VER INSTAGRAM</button></div></div>
+  </div>
+
+  <div class="bnav">
+    <button class="nbtn" onclick="cGo('home')" id="cn-home"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A6A30" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nlbl" style="color:#8A6A30">Inicio</span></button>
+    <button class="nbtn" onclick="cGo('carta')" id="cn-carta"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nlbl" style="color:#A09890">Carta</span></button>
+    <button class="nbtn" onclick="cGo('drops')" id="cn-drops"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nlbl" style="color:#A09890">Drops</span></button>
+    <button class="nbtn" onclick="cGo('review')" id="cn-review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nlbl" style="color:#A09890">Reseña</span></button>
+    <button class="nbtn" onclick="cGo('social')" id="cn-social"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><span class="nlbl" style="color:#A09890">Redes</span></button>
+  </div>
+
+  <!-- PLANETA -->
+  <div class="scroll scr" id="c-planeta">
+    <div style="padding:11px 14px 0;display:flex;align-items:center;gap:8px">
+      <button onclick="cGo('home')" style="background:none;border:none;cursor:pointer;color:var(--wg);font-size:20px">‹</button>
+      <div><p class="ey" style="margin-bottom:2px">Café Lapinou</p><h1 class="serif" style="font-size:21px;color:var(--ch);font-weight:500">Huella Lapinou</h1></div>
+    </div>
+    <div style="padding:6px 14px 9px"><p id="p-intro-txt" style="font-size:11px;color:var(--wg);line-height:1.6">Creemos que un buen café y un planeta sano van de la mano. Aquí te contamos lo que hacemos.</p></div>
+
+    <!-- 1% for the Planet -->
+    <div style="margin:0 14px 10px;border-radius:14px;overflow:hidden;background:var(--wh)">
+      <div id="p-1pct-img" style="background:var(--iv);height:130px;display:flex;align-items:center;justify-content:center">
+        <p style="font-size:11px;color:var(--wl);letter-spacing:.08em">1% FOR THE PLANET</p>
+      </div>
+      <div style="padding:12px">
+        <p class="ey" style="color:var(--go);margin-bottom:4px">Miembros de 1% for the Planet</p>
+        <p id="p-1pct-txt" style="font-size:12px;color:var(--wg);line-height:1.7">El 1% de nuestras ventas anuales va directo a organizaciones ambientales certificadas. Es un compromiso legal, no una promesa.</p>
+      </div>
+    </div>
+
+    <!-- Naturalia -->
+    <div style="margin:0 14px 10px;border-radius:14px;overflow:hidden;background:var(--wh)">
+      <div id="p-nat-img" style="background:#E8F0E8;height:130px;display:flex;align-items:center;justify-content:center">
+        <p style="font-size:11px;color:#5A7A5A;letter-spacing:.08em">NATURALIA</p>
+      </div>
+      <div style="padding:12px">
+        <p class="ey" style="color:var(--go);margin-bottom:4px">Organización del año · Naturalia</p>
+        <p id="p-nat-txt" style="font-size:12px;color:var(--wg);line-height:1.7">Este año apoyamos a Naturalia, organización mexicana dedicada a la conservación de la vida silvestre y sus hábitats naturales.</p>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div style="margin:0 14px 10px">
+      <p class="ey" style="margin-bottom:8px">Lo que hacemos cada día</p>
+      <div id="p-acciones-list"></div>
+    </div>
+
+    <div style="padding:4px 14px 24px;text-align:center">
+      <p style="font-size:10px;color:var(--wl);line-height:1.6">¿Tienes sugerencias? Escríbenos en Instagram o WhatsApp.</p>
+    </div>
+  </div>
+
+  <div class="lvup" id="c-lvup" style="display:none">
+    <svg width="66" height="80" viewBox="0 0 100 120" style="color:#8A6A30;margin-bottom:12px"><use href="#lapinou"/></svg>
+    <p class="serif" style="font-size:24px;color:var(--cr);font-weight:500;margin-bottom:4px">¡Subiste de nivel!</p>
+    <p class="ey" id="c-lvup-name" style="color:var(--gl);margin-bottom:14px">Ahora eres Conejo Leal</p>
+    <div id="c-lvup-perks" style="background:rgba(248,243,236,.07);border-radius:11px;padding:11px;width:100%;margin-bottom:16px;text-align:left"></div>
+    <button class="bgold" onclick="document.getElementById('c-lvup').style.display='none';ST.stamps=ST.stamps.map(()=>false);renderStamps()">¡Gracias, Lapinou!</button>
+  </div>
+  <div class="toast" id="c-toast" style="display:none"><svg width="16" height="20" viewBox="0 0 100 120" style="color:#8A6A30;flex-shrink:0"><use href="#lapinou"/></svg><span id="c-tmsg"></span></div>
+</div>
+<!-- ══ BARISTA ══ -->
+<div class="phone ph-b" id="ph-barista" style="display:none">
+  <div class="sbar sd"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><svg width="14" height="10" viewBox="0 0 15 11" fill="#F8F3EC"><rect x="0" y="2" width="2.5" height="9" rx="1"/><rect x="4" y="1" width="2.5" height="10" rx="1"/><rect x="8" y="0" width="2.5" height="11" rx="1"/><rect x="12" y="1" width="2.5" height="10" rx="1" opacity=".25"/></svg><svg width="21" height="10" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke="#F8F3EC" stroke-opacity=".35"/><rect x="1.5" y="1.5" width="16" height="9" rx="2.5" fill="#F8F3EC"/></svg></div></div>
+  <div class="bscr on" id="b-pin">
+    <div class="pin-wrap">
+      <div style="text-align:center;margin-bottom:18px"><svg width="50" height="60" viewBox="0 0 100 120" style="color:#8A6A30;display:block;margin:0 auto 10px"><use href="#lapinou"/></svg><p class="serif" style="font-size:17px;color:var(--cr);font-weight:500">Vista barista</p><p class="ey" style="color:var(--wl);margin-top:2px">Café Lapinou</p></div>
+      <p style="text-align:center;font-size:10px;color:var(--wl);letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px">Ingresa tu PIN</p>
+      <div class="pin-dots" id="b-dots"><div class="pd" id="bd0"></div><div class="pd" id="bd1"></div><div class="pd" id="bd2"></div><div class="pd" id="bd3"></div></div>
+      <div class="pinpad">
+        <button class="pkey" onclick="bPin('1')">1</button><button class="pkey" onclick="bPin('2')">2</button><button class="pkey" onclick="bPin('3')">3</button>
+        <button class="pkey" onclick="bPin('4')">4</button><button class="pkey" onclick="bPin('5')">5</button><button class="pkey" onclick="bPin('6')">6</button>
+        <button class="pkey" onclick="bPin('7')">7</button><button class="pkey" onclick="bPin('8')">8</button><button class="pkey" onclick="bPin('9')">9</button>
+        <button class="pkey ka" onclick="bPin('clear')">BORRAR</button><button class="pkey" onclick="bPin('0')">0</button><button class="pkey kg" onclick="bPin('ok')">OK</button>
+      </div>
+      <p style="text-align:center;font-size:10px;color:var(--wg);margin-top:12px">PIN demo: 1234</p>
+    </div>
+  </div>
+  <div class="bscr" id="b-scan" style="flex:1;overflow-y:auto;padding-bottom:12px">
+    <div style="padding:11px 13px 0;display:flex;justify-content:space-between;align-items:center"><div><p class="ey" style="color:var(--wl);margin-bottom:2px">Café Lapinou · Caja</p><h1 class="serif" style="font-size:18px;color:var(--cr);font-weight:500">Registrar visita</h1></div><button onclick="bLock()" style="background:rgba(248,243,236,.08);border:none;border-radius:100px;padding:5px 10px;color:var(--wl);font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:.08em;cursor:pointer">SALIR</button></div>
+    <div style="text-align:center;padding:5px 0 0"><p style="font-size:10px;color:var(--wl);letter-spacing:.06em;margin-bottom:2px">Apunta al QR del cliente</p><div class="scanbox" onclick="bSim()"><div class="scanline"></div><p style="font-size:9px;color:rgba(138,106,48,.7);letter-spacing:.07em;margin-top:118px;z-index:1;position:relative">TOCA PARA SIMULAR</p></div></div>
+    <div style="margin:5px 13px 0"><p class="ey" style="color:var(--wl);margin-bottom:4px;text-align:center">— o busca por nombre —</p><div style="background:rgba(248,243,236,.07);border-radius:9px;padding:8px 10px;display:flex;align-items:center;gap:7px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="b-search" type="text" placeholder="Nombre del cliente..." style="background:none;border:none;outline:none;color:var(--cr);font-family:'Josefin Sans',sans-serif;font-size:13px;width:100%" oninput="bSearch(this.value)"></div><div id="b-results" style="margin-top:4px"></div></div>
+    <div style="padding:11px 13px 0"><p class="ey" style="color:var(--wl);margin-bottom:5px">Últimos registros</p><div id="b-recent"><p style="font-size:11px;color:var(--wg);text-align:center;padding:6px 0">Sin registros aún hoy</p></div></div>
+  </div>
+  <div class="bscr" id="b-confirm" style="flex:1;overflow-y:auto;justify-content:center;padding:20px 13px;text-align:center">
+    <div style="width:66px;height:66px;border-radius:50%;border:3px solid var(--go);display:flex;align-items:center;justify-content:center;margin:0 auto 11px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8A6A30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <p class="serif" style="font-size:21px;color:var(--cr);font-weight:500;margin-bottom:3px">¡Sello registrado!</p>
+    <p id="b-cname" style="font-size:12px;color:var(--wl);letter-spacing:.04em;margin-bottom:14px"></p>
+    <div style="background:rgba(248,243,236,.06);border-radius:12px;padding:11px;margin-bottom:12px;text-align:left">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;color:var(--wl);letter-spacing:.06em">VISITA</span><span id="b-cvisit" style="font-size:12px;color:var(--cr);font-weight:600"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:10px;color:var(--wl);letter-spacing:.06em">NIVEL</span><span id="b-clevel" style="font-size:12px;color:var(--gl);font-weight:600"></span></div>
+      <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--wl);letter-spacing:.06em">PARA BENEFICIO</span><span id="b-crem" style="font-size:12px;color:var(--cr);font-weight:600"></span></div>
+    </div>
+    <div id="b-lvup-alert" style="display:none;background:rgba(138,106,48,.18);border:1px solid var(--go);border-radius:10px;padding:9px;margin-bottom:10px"><p style="font-size:12px;color:var(--gl);font-weight:600">🎉 ¡Subió de nivel!</p><p id="b-lvup-txt" style="font-size:11px;color:rgba(184,146,42,.8);margin-top:2px"></p></div>
+    <button onclick="bNext()" style="background:var(--go);color:var(--cr);border:none;border-radius:100px;padding:10px 20px;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;width:100%">Siguiente cliente</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN ══ -->
+<div class="phone ph-a" id="ph-admin" style="display:none">
+  <div class="sbar sl"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><svg width="14" height="10" viewBox="0 0 15 11" fill="#1E1C19"><rect x="0" y="2" width="2.5" height="9" rx="1"/><rect x="4" y="1" width="2.5" height="10" rx="1"/><rect x="8" y="0" width="2.5" height="11" rx="1"/><rect x="12" y="1" width="2.5" height="10" rx="1" opacity=".25"/></svg><svg width="21" height="10" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke="#1E1C19" stroke-opacity=".35"/><rect x="1.5" y="1.5" width="16" height="9" rx="2.5" fill="#1E1C19"/></svg></div></div>
+  <div class="ascr on" id="a-pin" style="flex:1;display:flex;flex-direction:column">
+    <div class="pin-wrap">
+      <div style="text-align:center;margin-bottom:18px"><div style="width:50px;height:50px;border-radius:13px;background:var(--go);display:flex;align-items:center;justify-content:center;margin:0 auto 9px;font-size:22px">⚙️</div><p class="serif" style="font-size:17px;color:var(--ch);font-weight:500">Panel Admin</p><p class="ey" style="margin-top:2px">Café Lapinou</p></div>
+      <p style="text-align:center;font-size:10px;color:var(--wg);letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px">Ingresa tu PIN</p>
+      <div class="pin-dots" id="a-dots"><div class="pd" id="ad0" style="border-color:var(--go)"></div><div class="pd" id="ad1" style="border-color:var(--go)"></div><div class="pd" id="ad2" style="border-color:var(--go)"></div><div class="pd" id="ad3" style="border-color:var(--go)"></div></div>
+      <div class="pinpad">
+        <button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('1')">1</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('2')">2</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('3')">3</button>
+        <button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('4')">4</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('5')">5</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('6')">6</button>
+        <button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('7')">7</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('8')">8</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('9')">9</button>
+        <button class="pkey ka" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('clear')">BORRAR</button><button class="pkey" style="background:rgba(30,28,25,.08);color:var(--ch)" onclick="aPin('0')">0</button><button class="pkey" style="background:var(--go);color:var(--cr)" onclick="aPin('ok')">OK</button>
+      </div>
+      <p style="text-align:center;font-size:10px;color:var(--wg);margin-top:12px">PIN demo: 9999</p>
+    </div>
+  </div>
+  <div id="a-main" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="a-toast" id="a-toast"></div>
+
+    <!-- Header fijo -->
+    <div style="background:var(--wh);padding:9px 13px 0;border-bottom:1px solid var(--iv);flex-shrink:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+        <div>
+          <div class="fb-pill load" id="fb-status"><span class="fb-dot"></span><span id="fb-txt">Sin Firebase</span></div>
+          <p class="serif" style="font-size:15px;color:var(--ch);font-weight:500">Café Lapinou Admin</p>
+        </div>
+        <button onclick="aLock()" style="background:var(--iv);border:none;border-radius:100px;padding:5px 10px;font-family:'Josefin Sans',sans-serif;font-size:10px;color:var(--wg);letter-spacing:.08em;cursor:pointer">SALIR</button>
+      </div>
+      <div class="atabs">
+        <button class="atab on" data-t="hoy"    onclick="aTab('hoy')">Hoy</button>
+        <button class="atab"    data-t="menu"   onclick="aTab('menu')">Menú</button>
+        <button class="atab"    data-t="drops"  onclick="aTab('drops')">Drops</button>
+        <button class="atab"    data-t="carta"  onclick="aTab('carta')">Carta</button>
+        <button class="atab"    data-t="notifs" onclick="aTab('notifs')">Alertas</button>
+        <button class="atab"    data-t="stats"  onclick="aTab('stats')">Stats</button>
+        <button class="atab"    data-t="planeta" onclick="aTab('planeta')">🌿</button>
+      </div>
+    </div>
+
+    <!-- Área scroll única -->
+    <div id="a-scroll" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0">
+
+      <!-- HOY -->
+      <div id="at-hoy">
+        <div style="margin:9px 13px 8px;background:var(--ch);border-radius:11px;padding:10px 11px;display:flex;align-items:center;gap:7px"><span style="font-size:14px">👁</span><p style="font-size:11px;color:rgba(248,243,236,.8);line-height:1.4">Guardar actualiza el feed del cliente al instante.</p></div>
+        <div class="acard"><p class="ey" style="color:var(--go);margin-bottom:9px">🍞 Pan del día</p>
+          <div style="margin-bottom:7px"><label class="albl">Nombre</label><input class="afield" id="a-pan-n" placeholder="Ej. Baguette de centeno"></div>
+          <div style="display:flex;gap:7px">
+            <div style="flex:1"><label class="albl">Precio $</label><input class="afield" id="a-pan-p" type="number" placeholder="42"></div>
+            <div style="flex:1"><label class="albl">Stock</label><div style="display:flex;align-items:center;gap:5px;margin-top:9px"><input type="checkbox" id="a-pan-d" checked style="width:16px;height:16px;accent-color:var(--go)"><span style="font-size:11px;color:var(--wg)">Disponible</span></div></div>
+          </div>
+        </div>
+        <div class="acard"><p class="ey" style="color:var(--go);margin-bottom:9px">☕ Bebida del día</p>
+          <div style="margin-bottom:7px"><label class="albl">Nombre</label><input class="afield" id="a-caf-n" placeholder="Ej. Etiopía Yirgacheffe"></div>
+          <div style="margin-bottom:7px"><label class="albl">Descripción / notas</label><input class="afield" id="a-caf-t" placeholder="Ej. Notas de durazno y bergamota"></div>
+          <div><label class="albl">Precio $</label><input class="afield" id="a-caf-p" type="number" placeholder="68"></div>
+        </div>
+        <div class="acard">
+          <p class="ey" style="color:var(--go);margin-bottom:4px">✨ Anuncios adicionales</p>
+          <p style="font-size:10px;color:var(--wl);margin-bottom:10px;line-height:1.5">Agrega especiales, postres, eventos o promociones — aparecen en el feed del cliente.</p>
+          <div id="a-extras-list"></div>
+          <button class="add-btn" onclick="addExtra()" style="margin-top:4px">+ Agregar anuncio</button>
+        </div>
+        <div class="acard"><p class="ey" style="color:var(--rd);margin-bottom:7px">😔 Agotados hoy</p>
+          <label class="albl">Separados por coma</label>
+          <textarea class="afield" id="a-sold" rows="2" placeholder="Croissant de mantequilla, Pain au chocolat" style="resize:none;font-size:12px;line-height:1.5"></textarea>
+        </div>
+        <div style="padding:0 13px 20px"><button class="bgold" id="a-save-hoy" onclick="saveHoy()">Guardar y publicar</button></div>
+      </div>
+
+      <!-- MENÚ -->
+      <div id="at-menu" style="display:none">
+        <div style="padding:9px 13px 7px"><p style="font-size:11px;color:var(--wg);line-height:1.5;margin-bottom:9px">Platillos y bebidas del día. Los clientes los ven agrupados por categoría en Inicio.</p><button class="add-btn" onclick="addMenuItem()">+ Agregar platillo o bebida</button></div>
+        <div id="a-menu-forms" style="padding:0 13px 9px"></div>
+        <div style="padding:0 13px 20px"><button class="bgold" id="a-save-menu" onclick="saveMenu()">Publicar menú del día</button></div>
+      </div>
+
+      <!-- DROPS -->
+      <div id="at-drops" style="display:none">
+        <div style="padding:9px 13px 7px"><p style="font-size:11px;color:var(--wg);line-height:1.5;margin-bottom:9px">Activa solo el drop disponible hoy. Los demás aparecen como "próximamente".</p><button class="add-btn" onclick="addDrop()">+ Agregar nuevo drop</button></div>
+        <div id="a-dforms" style="padding:0 13px 9px"></div>
+        <div style="padding:0 13px 20px"><button class="bgold" id="a-save-drops" onclick="saveDrops()">Guardar drops</button></div>
+      </div>
+
+      <!-- CARTA -->
+      <div id="at-carta" style="display:none">
+        <div style="padding:9px 13px 7px"><p style="font-size:11px;color:var(--wg);line-height:1.5;margin-bottom:9px">Carta completa con precios. Agrupa por categoría (☕ Cafés, 🥐 Panadería, 🍳 Desayunos, 🍽 Comida, 🍰 Postres).</p><button class="add-btn" onclick="addCartaItem()">+ Agregar ítem a la carta</button></div>
+        <div id="a-carta-forms" style="padding:0 13px 9px"></div>
+        <div style="padding:0 13px 20px"><button class="bgold" id="a-save-carta" onclick="saveCarta()">Guardar carta</button></div>
+      </div>
+
+      <!-- ALERTAS -->
+      <div id="at-notifs" style="display:none;padding:9px 13px 20px">
+        <p class="ey" style="margin-bottom:6px">Vista previa</p>
+        <div style="background:var(--ch);border-radius:11px;padding:10px;display:flex;align-items:flex-start;gap:8px;margin-bottom:9px"><div style="width:28px;height:28px;background:rgba(138,106,48,.2);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px" id="a-prev-ico">⬛</div><div style="flex:1"><p id="a-prev-txt" style="font-size:11px;color:var(--cr);font-weight:600;line-height:1.4">—</p><p class="ey" style="color:var(--wl);margin-top:2px">Toca para reservar</p></div></div>
+        <div class="acard" style="margin:0 0 8px"><p class="ey" style="color:var(--go);margin-bottom:7px">📣 Texto del banner</p><label class="albl">Mensaje</label><textarea class="afield" id="a-notif-msg" rows="3" style="resize:none;font-size:12px;line-height:1.5" oninput="document.getElementById('a-prev-txt').textContent=this.value"></textarea></div>
+        <button onclick="buildNotif()" class="biv" style="margin-bottom:6px">✨ Generar desde drop activo</button>
+        <button class="bgold" id="a-save-notif" onclick="saveNotif()" style="margin-bottom:9px">Publicar alerta</button>
+        <div class="acard" style="margin:0"><p class="ey" style="margin-bottom:7px">Configuración</p>
+          <div class="trow"><div><p style="font-size:12px;color:var(--ch);font-weight:600">Early access (Conejo Leal)</p><p class="ey" style="margin-top:1px">1 hora antes</p></div><div class="tog" style="background:var(--go)" onclick="togClick(this)"><div class="tth" style="left:19px"></div></div></div>
+          <div class="trow"><div><p style="font-size:12px;color:var(--ch);font-weight:600">Últimas 3 piezas</p><p class="ey" style="margin-top:1px">Notifica al Conejo Leal</p></div><div class="tog" style="background:var(--go)" onclick="togClick(this)"><div class="tth" style="left:19px"></div></div></div>
+          <div class="trow"><div><p style="font-size:12px;color:var(--ch);font-weight:600">Recordatorio reseña</p><p class="ey" style="margin-top:1px">Tras visita 5</p></div><div class="tog" style="background:var(--wl)" onclick="togClick(this)"><div class="tth" style="left:3px"></div></div></div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div id="at-stats" style="display:none;padding:9px 13px 20px">
+        <p class="ey" style="margin-bottom:7px">Esta semana</p>
+        <div style="display:flex;gap:6px;margin-bottom:9px">
+          <div class="schip"><p class="serif" style="font-size:22px;color:var(--ch);font-weight:500" id="s-vis">47</p><p class="ey" style="margin-top:2px">Visitas</p></div>
+          <div class="schip"><p class="serif" style="font-size:22px;color:var(--go);font-weight:500">12</p><p class="ey" style="margin-top:2px">Drops</p></div>
+          <div class="schip"><p class="serif" style="font-size:22px;color:var(--ch);font-weight:500">3</p><p class="ey" style="margin-top:2px">Reseñas</p></div>
+        </div>
+        <p class="ey" style="margin-bottom:7px">Niveles de clientes</p>
+        <div class="acard" style="margin:0 0 9px"><div style="display:flex;flex-direction:column;gap:10px">
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--wg);font-weight:600">Conejo Casual</span><span style="font-size:11px;color:var(--ch);font-weight:600">68</span></div><div class="pbar-w"><div class="pbar-f" style="width:68%;background:var(--wl)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--wg);font-weight:600">Conejo Leal</span><span style="font-size:11px;color:var(--ch);font-weight:600">24</span></div><div class="pbar-w"><div class="pbar-f" style="width:24%;background:var(--go)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:var(--wg);font-weight:600">Conejo Incondicional</span><span style="font-size:11px;color:var(--ch);font-weight:600">8</span></div><div class="pbar-w"><div class="pbar-f" style="width:8%;background:var(--ch)"></div></div></div>
+        </div></div>
+        <p class="ey" style="margin-bottom:7px">Top clientes</p>
+        <div class="acard" style="margin:0"><div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:7px"><svg width="18" height="22" viewBox="0 0 100 120" style="color:#8A6A30"><use href="#lapinou"/></svg><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">Carlos Peña</p><p class="ey">Conejo Incondicional · 41 visitas</p></div></div>
+          <div style="display:flex;align-items:center;gap:7px"><svg width="18" height="22" viewBox="0 0 100 120" style="color:#8A6A30"><use href="#lapinou"/></svg><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">Sofía Ramírez</p><p class="ey">Conejo Leal · <span id="s-sofia">23</span> visitas</p></div></div>
+          <div style="display:flex;align-items:center;gap:7px"><svg width="18" height="22" viewBox="0 0 100 120" style="color:#8A6A30"><use href="#lapinou"/></svg><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">Ana Gutiérrez</p><p class="ey">Conejo Leal · 40 visitas</p></div></div>
+        </div></div>
+      </div>
+
+
+      <!-- PLANETA -->
+      <div id="at-planeta" style="display:none;padding-bottom:20px">
+        <div style="margin:9px 13px 8px;background:#2E5E2E;border-radius:11px;padding:10px 11px;display:flex;align-items:center;gap:7px"><span style="font-size:14px">🌿</span><p style="font-size:11px;color:rgba(255,255,255,.85);line-height:1.4">Edita textos e imágenes de "Huella Lapinou".</p></div>
+
+        <!-- Intro -->
+        <div class="acard">
+          <p class="ey" style="color:var(--go);margin-bottom:7px">Texto de introducción</p>
+          <textarea class="afield" id="a-intro-txt" rows="3" style="resize:none;font-size:12px;line-height:1.5"></textarea>
+        </div>
+
+        <!-- 1% for the Planet -->
+        <div class="acard">
+          <p class="ey" style="color:var(--go);margin-bottom:9px">1% for the Planet</p>
+          <label class="albl">Logo / foto (pega una URL o sube desde tu galería)</label>
+          <div style="display:flex;gap:7px;margin-bottom:9px;align-items:flex-start">
+            <input class="afield" id="a-1pct-url" placeholder="https://…" style="font-size:11px;flex:1" oninput="prevImg('p-1pct-prev',this.value)">
+            <label style="background:var(--iv);border:none;border-radius:9px;padding:8px 10px;font-size:10px;color:var(--ch);font-weight:600;letter-spacing:.06em;cursor:pointer;flex-shrink:0;white-space:nowrap">
+              📁 GALERÍA<input type="file" accept="image/*" style="display:none" onchange="fileToUrl(this,'a-1pct-url','p-1pct-prev')">
+            </label>
+          </div>
+          <div id="p-1pct-prev" style="background:var(--iv);border-radius:9px;height:90px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;overflow:hidden">
+            <p style="font-size:10px;color:var(--wl)">Vista previa</p>
+          </div>
+          <label class="albl">Texto</label>
+          <textarea class="afield" id="a-1pct-txt" rows="3" style="resize:none;font-size:12px;line-height:1.5"></textarea>
+        </div>
+
+        <!-- Naturalia -->
+        <div class="acard">
+          <p class="ey" style="color:var(--go);margin-bottom:9px">Naturalia</p>
+          <label class="albl">Logo / foto (pega una URL o sube desde tu galería)</label>
+          <div style="display:flex;gap:7px;margin-bottom:9px;align-items:flex-start">
+            <input class="afield" id="a-nat-url" placeholder="https://…" style="font-size:11px;flex:1" oninput="prevImg('p-nat-prev',this.value)">
+            <label style="background:var(--iv);border:none;border-radius:9px;padding:8px 10px;font-size:10px;color:var(--ch);font-weight:600;letter-spacing:.06em;cursor:pointer;flex-shrink:0;white-space:nowrap">
+              📁 GALERÍA<input type="file" accept="image/*" style="display:none" onchange="fileToUrl(this,'a-nat-url','p-nat-prev')">
+            </label>
+          </div>
+          <div id="p-nat-prev" style="background:var(--iv);border-radius:9px;height:90px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;overflow:hidden">
+            <p style="font-size:10px;color:var(--wl)">Vista previa</p>
+          </div>
+          <label class="albl">Texto</label>
+          <textarea class="afield" id="a-nat-txt" rows="3" style="resize:none;font-size:12px;line-height:1.5"></textarea>
+        </div>
+
+        <!-- Acciones -->
+        <div class="acard">
+          <p class="ey" style="color:var(--go);margin-bottom:9px">Acciones del día a día</p>
+          <div id="a-acc-list"></div>
+          <button class="add-btn" onclick="addAccion()" style="margin-top:6px">+ Agregar acción</button>
+        </div>
+
+        <div style="padding:0 13px"><button class="bgold" id="a-save-planeta" onclick="savePlaneta()">Guardar cambios</button></div>
+      </div>
+
+    </div><!-- /a-scroll -->
+  </div><!-- /a-main -->
+</div>
+
+<p style="color:#55504A;font-size:10px;letter-spacing:.08em;text-transform:uppercase;text-align:center" id="hint">Explora las 5 pestañas · Admin PIN 9999</p>
+<script>
+// Conejo Lapinou — logo real
+const LAPINOU_IMG="data:image/png;base64,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";
+
+// ══ FIREBASE CONFIG ══
+const FB_CONFIG={
+  apiKey:"AIzaSyDVPtWR3SeDsTxk9IAaLLknC7Le3jpSHRY",
+  authDomain:"lealtad-clientes-cafe-lapinou.firebaseapp.com",
+  projectId:"lealtad-clientes-cafe-lapinou",
+  storageBucket:"lealtad-clientes-cafe-lapinou.firebasestorage.app",
+  messagingSenderId:"286780642688",
+  appId:"1:286780642688:web:07d07d36d1d486b7c9dd65"
+};
+let db=null,FB_OK=false;
+function initFirebase(){try{firebase.initializeApp(FB_CONFIG);db=firebase.firestore();db.collection('content').doc('hoy').get().then(()=>{setFBStatus(true);loadFromFirebase();}).catch(()=>{setFBStatus(false);loadDefaults();});}catch(e){setFBStatus(false);loadDefaults();}}
+function setFBStatus(ok){FB_OK=ok;const pill=document.getElementById('fb-status'),txt=document.getElementById('fb-txt');if(!pill)return;pill.className='fb-pill '+(ok?'ok':'err');txt.textContent=ok?'Firebase conectado':'Modo demo';}
+function loadFromFirebase(){if(!db)return;db.collection('content').doc('hoy').onSnapshot(doc=>{if(doc.exists){const d=doc.data();if(d.pan)C.pan=d.pan;if(d.cafe)C.cafe=d.cafe;if(d.sold)C.sold=d.sold;if(d.notif)C.notif=d.notif;if(d.menuHoy)C.menuHoy=d.menuHoy;renderAll();}else loadDefaults();});db.collection('content').doc('drops').onSnapshot(doc=>{if(doc.exists&&doc.data().list){C.drops=doc.data().list;renderDropsList();renderHomeDropMain();renderNotifBanner();}});db.collection('content').doc('carta').onSnapshot(doc=>{if(doc.exists&&doc.data().items){C.carta=doc.data().items;renderCarta();}});}
+function loadDefaults(){renderAll();}
+async function fbSet(path,data){if(!db||!FB_OK)return;const[col,doc]=path.split('/');try{await db.collection(col).doc(doc).set(data,{merge:true});}catch(e){console.warn(e);}}
+
+// ══ CONTENT STATE ══
+const C={
+  pan:{n:'Baguette de centeno con semillas',p:'42',ok:true},
+  cafe:{n:'Etiopía Yirgacheffe',t:'Notas de durazno y bergamota',p:'68'},
+  sold:['Croissant de mantequilla','Pain au chocolat'],
+  feedExtra:[
+    {ico:'🍽', titulo:'Quiche del día', desc:'Quiche de poro y queso de cabra', precio:'145', ok:true},
+  ],
+  extras:[],
+  planeta:{
+    txt1pct:'El 1% de nuestras ventas anuales va directo a organizaciones ambientales certificadas. Es un compromiso legal, no una promesa.',
+    intro:'Creemos que un buen café y un planeta sano van de la mano. Aquí te contamos lo que hacemos.',
+    img1pct:'',
+    txtNat:'Este año apoyamos a Naturalia, organización mexicana dedicada a la conservación de la vida silvestre y sus hábitats naturales.',
+    imgNat:'',
+    acciones:[
+      {ico:'♻️',txt:'Nuestros desechables son 100% reciclables y compostables.'},
+      {ico:'🫙',txt:'Usamos tazas de vidrio y cerámica para consumo en el lugar.'},
+      {ico:'🌵',txt:'$5 MXN de descuento por traer tu termo en bebidas para llevar.'},
+    ]
+  },
+  drops:[{n:'Croissant Cubo',e:'⬛',p:'58',pc:'6',d:'Hoy',on:true},{n:'Croissant Esfera',e:'⚫',p:'62',pc:'20',d:'Jueves',on:false},{n:'Croissant Pirámide',e:'🔺',p:'65',pc:'20',d:'Sábado',on:false}],
+  notif:'Quedan 6 croissants cubo — early access vence a las 9:30 AM',
+  menuHoy:[{n:'Huevos benedictinos',cat:'🍳 Desayuno',p:'185',ok:true},{n:'Tostada de aguacate',cat:'🍳 Desayuno',p:'145',ok:true},{n:'Sopa de cebolla',cat:'🍽 Comida',p:'120',ok:false},{n:'Americano',cat:'☕ Bebidas',p:'65',ok:true},{n:'Latte',cat:'☕ Bebidas',p:'80',ok:true}],
+  carta:[{cat:'☕ Cafés',n:'Espresso',p:'55'},{cat:'☕ Cafés',n:'Americano',p:'65'},{cat:'☕ Cafés',n:'Latte',p:'80'},{cat:'☕ Cafés',n:'Capuchino',p:'80'},{cat:'☕ Cafés',n:'Bebida del día',p:'68'},{cat:'🥐 Panadería',n:'Croissant clásico',p:'48'},{cat:'🥐 Panadería',n:'Pain au chocolat',p:'52'},{cat:'🥐 Panadería',n:'Croissant geométrico',p:'58'},{cat:'🥐 Panadería',n:'Baguette',p:'42'},{cat:'🍳 Desayunos',n:'Huevos benedictinos',p:'185'},{cat:'🍳 Desayunos',n:'Tostada de aguacate',p:'145'},{cat:'🍳 Desayunos',n:'Bowl de fruta',p:'95'},{cat:'🍽 Comida',n:'Sopa del día',p:'120'},{cat:'🍽 Comida',n:'Ensalada Lapinou',p:'155'},{cat:'🍽 Comida',n:'Quiche de la casa',p:'145'},{cat:'🍰 Postres',n:'Macaron',p:'45'},{cat:'🍰 Postres',n:'Tarta de limón',p:'85'}]
+};
+const LEVELS=[{n:'Conejo Casual',i:1,min:1,max:15,perks:['Pasaporte digital activo','Acceso al menú digital','Visita 8: bebida del mes gratis']},{n:'Conejo Leal',i:2,min:16,max:40,perks:['Early access a drops (1 hora antes)','10% de descuento en pan salado (baguette, hogaza, pan de caja)','Visita 8: croissant geométrico gratis']},{n:'Conejo Incondicional',i:3,min:41,max:9999,perks:['Precio de mayoreo en pan','Invitación a catas privadas y eventos exclusivos','Visita 8: Paquete Desayuno Lapinou gratis']}];
+function getLv(v){return LEVELS.find(l=>v>=l.min&&v<=l.max)||LEVELS[0];}
+const ST={stamps:[true,true,true,true,true,false,false,false],TOTAL:7,visits:23,refs:[{n:'María López',j:'Hace 2 meses',ok:true},{n:'Roberto Díaz',j:'Hace 3 semanas',ok:true},{n:'Luisa Torres',j:'Hace 1 semana',ok:false}],rCrois:3,rtActive:new Set([0,1])};
+const RNAMES=['Valeria Romo','Andrés Cruz','Fernanda Gil','Pablo Reyes','Natalia Vega'];
+const RT_TPL={0:'El café es excepcional — pedí un espresso con acidez brillante, casi frutal.',1:'Los croissants geométricos son una locura visual y saben increíble.',2:'El ambiente es íntimo y cuidado, con una estética muy propia.',3:'El servicio es atento sin ser invasivo — te explican bien qué hay ese día.',4:'La presentación de cada pieza parece escultura comestible.',5:'Bien ubicado y fácil de llegar, con espacio para sentarse.'};
+const BS={pin:'',PIN:'1234',clients:[{n:'Sofía Ramírez',id:'LAP-0042',v:23},{n:'Diego Morales',id:'LAP-0017',v:15},{n:'Ana Gutiérrez',id:'LAP-0088',v:40},{n:'Carlos Peña',id:'LAP-0031',v:41}],recent:[]};
+const AS={pin:'',PIN:'9999'};
+
+// ══ PWA ══
+let pwaPrompt=null;
+const manifest={name:'Café Lapinou',short_name:'Lapinou',start_url:window.location.href,display:'standalone',background_color:'#1E1C19',theme_color:'#1E1C19',icons:[{src:'https://placehold.co/192x192/8A6A30/F8F3EC?text=L',sizes:'192x192',type:'image/png'},{src:'https://placehold.co/512x512/8A6A30/F8F3EC?text=L',sizes:'512x512',type:'image/png'}]};
+const mBlob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+document.getElementById('pwa-manifest').href=URL.createObjectURL(mBlob);
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaPrompt=e;document.getElementById('pwa-banner').style.display='flex';});
+window.addEventListener('appinstalled',()=>{document.getElementById('pwa-banner').style.display='none';cToast('¡App instalada! Busca el ícono en tu pantalla 🐰');});
+function pwaTrigger(){if(pwaPrompt){pwaPrompt.prompt();pwaPrompt.userChoice.then(r=>{if(r.outcome==='accepted')document.getElementById('pwa-banner').style.display='none';pwaPrompt=null;});}else{cToast('En iOS: toca Compartir → "Añadir a pantalla de inicio" 📱');}}
+
+// ══ MODE ══
+function setMode(m){['client','barista','admin'].forEach(x=>document.getElementById('ph-'+x).style.display=x===m?'flex':'none');document.querySelectorAll('.mbtn').forEach((b,i)=>b.classList.toggle('on',['client','barista','admin'][i]===m));document.getElementById('hint').textContent={client:'Explora las 5 pestañas · Admin PIN 9999',barista:'PIN 1234 · Toca el escáner para simular',admin:'PIN 9999 · Edita cualquier campo y guarda'}[m];}
+
+// ══ CLIENT NAV ══
+const C_TABS=['home','qr','carta','drops','review','referral','social','planeta'];
+const CN_NAV=['home','carta','drops','review','social'];
+function cGo(id){C_TABS.forEach(t=>{const e=document.getElementById('c-'+t);if(e)e.classList.toggle('on',t===id);});CN_NAV.forEach(t=>{const nb=document.getElementById('cn-'+t);if(!nb)return;const act=t===id;nb.querySelectorAll('svg').forEach(s=>s.setAttribute('stroke',act?'#8A6A30':'#A09890'));nb.querySelector('.nlbl').style.color=act?'#8A6A30':'#A09890';});if(id==='qr')renderQR();if(id==='review')updateRT();if(id==='referral')renderFriends();if(id==='carta')renderCarta();}
+
+// ══ STAMPS — conejo Lapinou ══
+function renderStamps(){
+  const g=document.getElementById('c-sgrid');if(!g)return;
+  g.innerHTML='';
+  ST.stamps.forEach((f,i)=>{
+    const d=document.createElement('div');
+    d.className='stamp'+(f?' full':'');
+    const filt=f?'none':'opacity(.35)';
+    d.innerHTML='<img src="'+LAPINOU_IMG+'" width="28" height="28" style="display:block;filter:'+filt+'">';
+    if(!f)d.onclick=()=>cToast('El barista registra los sellos al escanear tu QR');
+    g.appendChild(d);
+  });
+  const f=ST.stamps.filter(Boolean).length,pct=Math.round(f/ST.TOTAL*100);
+  document.getElementById('c-pfill').style.width=pct+'%';
+  document.getElementById('c-sleft').textContent=f+' de '+ST.TOTAL+' visitas';
+  document.getElementById('c-sright').textContent=f<ST.TOTAL?(ST.TOTAL-f)+' para desbloquear':'¡Beneficio listo!';
+  const lv=getLv(ST.visits);
+  document.getElementById('c-lvname').textContent=lv.n;
+  document.getElementById('c-lvpill').textContent=lv.n.toUpperCase();
+  const qp=document.getElementById('c-qrpill');if(qp)qp.textContent=lv.n.toUpperCase();
+  const dl=document.getElementById('c-drops-lv');if(dl)dl.textContent=lv.n;
+}
+
+// ══ RENDER ALL ══
+// ── Admin Planeta ──
+// ── Imagen helpers ──
+function prevImg(previewId, url){
+  const box=document.getElementById(previewId); if(!box) return;
+  if(url){
+    box.innerHTML=`<img src="${url}" style="width:100%;height:90px;object-fit:contain;padding:6px">`;
+  } else {
+    box.innerHTML='<p style="font-size:10px;color:var(--wl)">Vista previa</p>';
+  }
+}
+function fileToUrl(input, urlFieldId, previewId){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const url=e.target.result;
+    const field=document.getElementById(urlFieldId);
+    if(field) field.value='[imagen local]';
+    // Store base64 in planeta state directly
+    if(urlFieldId==='a-1pct-url') C.planeta.img1pct=url;
+    if(urlFieldId==='a-nat-url')  C.planeta.imgNat=url;
+    prevImg(previewId, url);
+  };
+  reader.readAsDataURL(file);
+}
+
+function fillPlanetaForm(){
+  const p=C.planeta;
+  const ti=document.getElementById('a-intro-txt'); if(ti) ti.value=p.intro;
+  const t1=document.getElementById('a-1pct-txt'); if(t1) t1.value=p.txt1pct;
+  const tn=document.getElementById('a-nat-txt');  if(tn) tn.value=p.txtNat;
+  const u1=document.getElementById('a-1pct-url');
+  if(u1) u1.value=p.img1pct&&!p.img1pct.startsWith('data:')?p.img1pct:'';
+  if(p.img1pct) prevImg('p-1pct-prev', p.img1pct);
+  const un=document.getElementById('a-nat-url');
+  if(un) un.value=p.imgNat&&!p.imgNat.startsWith('data:')?p.imgNat:'';
+  if(p.imgNat) prevImg('p-nat-prev', p.imgNat);
+  renderAcciones();
+}
+function renderAcciones(){
+  const box=document.getElementById('a-acc-list'); if(!box) return;
+  box.innerHTML=(C.planeta.acciones||[]).map((a,i)=>`
+    <div class="iform">
+      <button class="irm" onclick="rmAccion(${i})">✕</button>
+      <div style="display:flex;gap:6px">
+        <div style="width:50px"><label class="albl">Emoji</label>
+          <input class="afield" id="ac-ico-${i}" value="${a.ico}" style="text-align:center;font-size:16px;padding:6px 2px">
+        </div>
+        <div style="flex:1"><label class="albl">Texto</label>
+          <input class="afield" id="ac-txt-${i}" value="${a.txt}" placeholder="Describe la acción" style="font-size:12px">
+        </div>
+      </div>
+    </div>`).join('');
+}
+function addAccion(){
+  C.planeta.acciones.push({ico:'🌱',txt:''});
+  renderAcciones();
+  setTimeout(()=>document.getElementById('a-acc-list')?.lastElementChild?.scrollIntoView({behavior:'smooth'}),80);
+}
+function rmAccion(i){ C.planeta.acciones.splice(i,1); renderAcciones(); }
+async function savePlaneta(){
+  C.planeta.intro   = document.getElementById('a-intro-txt')?.value || C.planeta.intro;
+  C.planeta.txt1pct = document.getElementById('a-1pct-txt')?.value || C.planeta.txt1pct;
+  C.planeta.txtNat  = document.getElementById('a-nat-txt')?.value  || C.planeta.txtNat;
+  // URL fields (solo si no es base64 ya guardado por fileToUrl)
+  const u1=document.getElementById('a-1pct-url')?.value||'';
+  if(u1 && u1!=='[imagen local]') C.planeta.img1pct=u1;
+  const un=document.getElementById('a-nat-url')?.value||'';
+  if(un && un!=='[imagen local]') C.planeta.imgNat=un;
+  C.planeta.acciones = (C.planeta.acciones||[]).map((a,i)=>({
+    ico: document.getElementById('ac-ico-'+i)?.value || a.ico,
+    txt: document.getElementById('ac-txt-'+i)?.value || a.txt,
+  })).filter(a=>a.txt);
+  renderPlaneta();
+  await fbSet('content/planeta', {planeta: C.planeta, updatedAt: new Date().toISOString()});
+  flashBtn('a-save-planeta'); aToast('¡Página Huella Lapinou actualizada!');
+}
+
+function renderPlaneta(){
+  const p=C.planeta;
+  // Textos
+  const ti=document.getElementById('p-intro-txt'); if(ti) ti.textContent=p.intro;
+  const t1=document.getElementById('p-1pct-txt'); if(t1) t1.textContent=p.txt1pct;
+  const tn=document.getElementById('p-nat-txt');  if(tn) tn.textContent=p.txtNat;
+  // Imagen 1%
+  const img1=document.getElementById('p-1pct-img');
+  if(img1){
+    img1.innerHTML = p.img1pct
+      ? `<img src="${p.img1pct}" style="width:100%;height:130px;object-fit:contain;padding:12px">`
+      : `<p style="font-size:11px;color:var(--wl);letter-spacing:.08em">1% FOR THE PLANET</p>`;
+  }
+  // Imagen Naturalia
+  const imgN=document.getElementById('p-nat-img');
+  if(imgN){
+    imgN.innerHTML = p.imgNat
+      ? `<img src="${p.imgNat}" style="width:100%;height:130px;object-fit:contain;padding:12px">`
+      : `<p style="font-size:11px;color:#5A7A5A;letter-spacing:.08em">NATURALIA</p>`;
+  }
+  // Acciones
+  const box=document.getElementById('p-acciones-list'); if(!box) return;
+  box.innerHTML=p.acciones.map(a=>
+    `<div style="background:var(--wh);border-radius:12px;padding:11px 12px;margin-bottom:7px;display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:20px;flex-shrink:0">${a.ico}</span>
+      <p style="font-size:12px;color:var(--ch);line-height:1.6">${a.txt}</p>
+    </div>`
+  ).join('');
+}
+
+function renderAll(){renderFeed();renderPlaneta();renderMenuHoy();renderHomeDropMain();renderDropsList();renderNotifBanner();renderCarta();fillHoyForm();fillNotifForm();renderDropForms();renderMenuForms();renderCartaForms();}
+
+function renderFeed(){
+  const box=document.getElementById('c-feed');if(!box)return;
+  const p=C.pan,ca=C.cafe,so=C.sold;
+  let out='';
+  out+='<div class="fcard"><div style="background:var(--go);padding:12px;display:flex;gap:9px;align-items:center">';
+  out+='<span style="font-size:22px">🍞</span><div style="flex:1">';
+  out+='<p class="ey" style="color:rgba(248,243,236,.6);margin-bottom:2px">Pan del día</p>';
+  out+='<p class="serif" style="font-size:14px;color:var(--cr);font-weight:500;font-style:italic;line-height:1.2">'+p.n+'</p></div>';
+  out+='<div style="text-align:right"><p class="serif" style="font-size:16px;color:var(--cr);font-weight:300">$'+p.p+'</p>';
+  out+=p.ok?'<span class="new-b" style="margin-top:3px;display:inline-flex">DISPONIBLE</span>':'<span class="sold-b" style="margin-top:3px;display:inline-flex">AGOTADO</span>';
+  out+='</div></div></div>';
+  out+='<div class="fcard"><div style="background:var(--ch);padding:12px;display:flex;gap:9px;align-items:center">';
+  out+='<span style="font-size:20px">☕</span><div style="flex:1">';
+  out+='<p class="ey" style="color:rgba(160,152,144,.7);margin-bottom:2px">Bebida del día</p>';
+  out+='<p class="serif" style="font-size:13px;color:var(--cr);font-weight:500;font-style:italic;line-height:1.2">'+ca.n+'<br><span style="font-size:11px;font-style:normal;color:rgba(248,243,236,.5)">'+ca.t+'</span></p></div>';
+  out+='<p class="serif" style="font-size:16px;color:var(--cr);font-weight:300">$'+ca.p+'</p></div></div>';
+  (C.extras||[]).filter(it=>it.tit).forEach(it=>{
+    out+='<div class="fcard"><div style="background:var(--wh);padding:12px;display:flex;gap:9px;align-items:center;border-radius:12px">';
+    out+='<span style="font-size:22px">'+(it.ico||'✨')+'</span><div style="flex:1">';
+    out+='<p class="ey" style="color:var(--go);margin-bottom:2px">'+it.tit+'</p>';
+    if(it.desc) out+='<p style="font-size:12px;color:var(--wg);line-height:1.4">'+it.desc+'</p>';
+    out+='</div>';
+    if(it.p){
+      out+='<div style="text-align:right;flex-shrink:0">';
+      out+='<p class="serif" style="font-size:15px;color:var(--go);font-weight:500">$'+it.p+'</p>';
+      out+=it.ok?'<span class="new-b" style="margin-top:3px;display:inline-flex">HOY</span>':'<span class="sold-b" style="margin-top:3px;display:inline-flex">AGOTADO</span>';
+      out+='</div>';
+    }
+    out+='</div></div>';
+  });
+  if(so.length){
+    out+='<div style="margin:0 14px 8px;background:var(--wh);border-radius:11px;padding:9px 11px;display:flex;align-items:center;gap:8px">';
+    out+='<span style="font-size:14px">😔</span><div style="flex:1">';
+    out+='<p style="font-size:11px;color:var(--ch);font-weight:600">Agotado hoy</p>';
+    out+='<p class="ey" style="margin-top:1px">'+so.join(', ')+'</p></div>';
+    out+='<span class="sold-b">SOLD OUT</span></div>';
+  }
+  box.innerHTML=out;
+}
+
+function renderMenuHoy(){const box=document.getElementById('c-menuhoy');if(!box)return;if(!C.menuHoy.length){box.innerHTML='<p style="text-align:center;font-size:11px;color:var(--wl);padding:8px 14px">Menú del día no disponible aún</p>';return;}const cats={};C.menuHoy.forEach(it=>{if(!cats[it.cat])cats[it.cat]=[];cats[it.cat].push(it);});let html='';Object.entries(cats).forEach(([cat,items])=>{html+=`<div style="margin:0 14px 7px;background:var(--iv);border-radius:10px;padding:8px 10px"><p class="ey" style="margin-bottom:5px">${cat}</p>`;items.forEach(it=>{html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(138,106,48,.1)"><p style="font-size:12px;color:${it.ok?'var(--ch)':'var(--wl)'};font-weight:600">${it.n}${!it.ok?' <span style="font-size:9px;color:var(--rd)">(agotado)</span>':''}</p><p style="font-size:12px;color:var(--go);font-weight:600">$${it.p}</p></div>`;});html+='</div>';});box.innerHTML=html;}
+
+function renderCarta(){const box=document.getElementById('c-carta-body');if(!box)return;const cats={};C.carta.forEach(it=>{if(!cats[it.cat])cats[it.cat]=[];cats[it.cat].push(it);});let html='';Object.entries(cats).forEach(([cat,items])=>{html+=`<div class="cat-header"><p style="font-size:12px;color:var(--cr);font-weight:600;letter-spacing:.04em">${cat}</p></div>`;items.forEach(it=>{html+=`<div class="carta-item"><p style="font-size:12px;color:var(--ch);font-weight:500">${it.n}</p><p style="font-size:13px;color:var(--go);font-weight:600;flex-shrink:0;margin-left:9px">$${it.p}</p></div>`;});});box.innerHTML=html||'<p style="text-align:center;font-size:11px;color:var(--wl);padding:14px">Carta no disponible</p>';}
+
+function renderHomeDropMain(){const box=document.getElementById('c-dropmain');if(!box)return;const a=C.drops.find(d=>d.on);if(!a){box.innerHTML='<p style="text-align:center;font-size:11px;color:var(--wl);padding:10px">Sin drop activo hoy</p>';return;}box.innerHTML=`<div class="dcard"><div class="din" style="background:var(--go)"><div><p class="ey" style="color:rgba(248,243,236,.6);margin-bottom:3px">Limitado · ${a.pc} piezas</p><h3 class="serif" style="font-size:18px;color:var(--cr);font-weight:500;font-style:italic;line-height:1.1">${a.n}</h3></div><div style="text-align:right"><p class="serif" style="font-size:18px;color:var(--cr);font-weight:300">$${a.p}</p><button class="bsm" style="margin-top:6px;color:var(--go)">RESERVAR</button></div></div></div>`;}
+function renderDropsList(){const box=document.getElementById('c-dropslist');if(!box)return;box.innerHTML=C.drops.map(d=>`<div class="dcard" ${d.on?'':'style="opacity:.6"'}><div class="din" style="background:${d.on?'var(--go)':'var(--ch)'}"><div><span style="font-size:19px">${d.e}</span><h3 class="serif" style="font-size:16px;color:var(--cr);font-weight:500;font-style:italic;margin-top:3px;line-height:1.1">${d.n}</h3><p class="ey" style="color:rgba(248,243,236,.5);margin-top:2px">${d.d}${d.on?' · '+d.pc+' piezas':''}</p></div><div style="text-align:right"><p class="serif" style="font-size:17px;color:var(--cr);font-weight:300">$${d.p}</p>${d.on?`<button class="bsm" style="margin-top:5px;color:var(--go)">RESERVAR</button>`:`<div style="background:rgba(248,243,236,.1);border-radius:100px;padding:4px 9px;margin-top:5px;font-size:9px;color:rgba(248,243,236,.4);letter-spacing:.07em;font-weight:700">PRÓXIMO</div>`}</div></div></div>`).join('');}
+function renderNotifBanner(){const nb=document.getElementById('c-nbanner');if(!nb)return;const a=C.drops.find(d=>d.on);if(a&&C.notif){nb.style.display='flex';document.getElementById('c-nb-ico').textContent=a.e;document.getElementById('c-nb-txt').innerHTML=C.notif.replace(/(\d+\s+\w+)/,'<span style="color:var(--gl)">$1</span>');}else nb.style.display='none';}
+
+let qrDone=false;
+function renderQR(){if(qrDone)return;qrDone=true;const box=document.getElementById('qrbox');try{new QRCode(box,{text:'LAP-2024-0042|SOFIA|CONEJO-CASUAL',width:158,height:158,colorDark:'#1E1C19',colorLight:'#F8F3EC',correctLevel:QRCode.CorrectLevel.H});}catch(e){box.innerHTML='<div style="width:158px;height:158px;background:#EDE6D9;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8A6A30;font-weight:600">QR · LAP-0042</div>';}}
+
+let tT=null;
+function cToast(msg){const t=document.getElementById('c-toast');document.getElementById('c-tmsg').textContent=msg;t.style.display='flex';t.classList.remove('out');if(tT)clearTimeout(tT);tT=setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.style.display='none',300);},2600);}
+
+const RT_LABELS=['☕ Café','🥐 Croissants','🌿 Ambiente','😊 Servicio','🎨 Presentación','📍 Ubicación'];
+function updateRT(){const box=document.getElementById('c-rtpills');if(!box)return;box.innerHTML=RT_LABELS.map((l,i)=>`<span class="ppill${ST.rtActive.has(i)?' on':''}" onclick="toggleRT(${i})">${l}</span>`).join('');const lines=[...ST.rtActive].map(i=>RT_TPL[i]).filter(Boolean);document.getElementById('c-rtxt').textContent=lines.length?(lines.join(' ')+' Definitivamente volvería — Café Lapinou tiene algo especial.'):'Selecciona al menos un tema.';}
+function toggleRT(i){ST.rtActive.has(i)?ST.rtActive.delete(i):ST.rtActive.add(i);updateRT();}
+function copyReview(){navigator.clipboard?.writeText(document.getElementById('c-rtxt')?.textContent||'').catch(()=>{});cToast('¡Texto copiado! Pégalo en Google 📋');}
+function openGoogle(){window.open('https://maps.google.com/search/Café+Lapinou','_blank');}
+
+function renderFriends(){const box=document.getElementById('c-friends');if(!box)return;box.innerHTML=ST.refs.map(r=>`<div style="background:var(--wh);border-radius:11px;padding:9px 11px;margin-bottom:6px;display:flex;align-items:center;gap:9px"><svg width="20" height="24" viewBox="0 0 100 120" style="color:#8A6A30"><use href="#lapinou"/></svg><div style="flex:1"><p style="font-size:12px;color:var(--ch);font-weight:600">${r.n}</p><p class="ey" style="margin-top:1px">${r.j}</p></div>${r.ok?'<span style="background:rgba(46,125,82,.1);color:var(--gn);border-radius:100px;padding:4px 8px;font-size:9px;letter-spacing:.07em;font-weight:700">CANJEADO ✓</span>':'<span style="background:rgba(138,106,48,.1);color:var(--go);border-radius:100px;padding:4px 8px;font-size:9px;letter-spacing:.07em;font-weight:700">PENDIENTE</span>'}</div>`).join('');}
+function addRef(){const name=RNAMES[ST.refs.length%RNAMES.length];ST.refs.unshift({n:name,j:'Ahora mismo',ok:false});ST.rCrois++;document.getElementById('c-rcount').textContent=ST.refs.length;document.getElementById('c-crcount').textContent=ST.rCrois;document.getElementById('c-refq').textContent=`${ST.refs.length} amigos · ${ST.rCrois} ganados`;renderFriends();cToast(`${name} se unió con tu código 🐰`);}
+function copyCode(){navigator.clipboard?.writeText('SOFIA22').catch(()=>{});cToast('Código copiado: SOFIA22');}
+
+// ══ BARISTA ══
+function bPin(k){if(k==='clear'){BS.pin=BS.pin.slice(0,-1);}else if(k==='ok'){bCheck();return;}else if(BS.pin.length<4){BS.pin+=k;}bDots();if(BS.pin.length===4)setTimeout(bCheck,150);}
+function bDots(){for(let i=0;i<4;i++){const d=document.getElementById('bd'+i);if(d)d.classList.toggle('on',i<BS.pin.length);}}
+function bCheck(){if(BS.pin===BS.PIN){bGoTo('scan');}else{const d=document.getElementById('b-dots');d.style.animation='none';d.offsetHeight;d.style.animation='shk .3s ease';BS.pin='';bDots();}}
+function bGoTo(id){document.querySelectorAll('.bscr').forEach(s=>{s.classList.remove('on');s.style.display='none';});const el=document.getElementById('b-'+id);el.style.display='flex';setTimeout(()=>el.classList.add('on'),10);}
+function bLock(){BS.pin='';bDots();bGoTo('pin');}
+function bRegister(cl){
+  const prevLv=getLv(cl.v);cl.v++;const newLv=getLv(cl.v);
+  BS.recent.unshift({...cl,time:new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})});if(BS.recent.length>5)BS.recent.pop();
+  if(cl.n==='Sofía Ramírez'){
+    const idx=ST.stamps.indexOf(false);
+    if(idx>=0){ST.stamps[idx]=true;ST.visits++;renderStamps();document.getElementById('c-qrvc').textContent=ST.visits;document.getElementById('s-sofia').textContent=ST.visits;
+      setTimeout(()=>{const cells=document.querySelectorAll('#c-sgrid .stamp');if(cells[idx]){cells[idx].classList.add('pop');setTimeout(()=>cells[idx].classList.remove('pop'),400);}},100);}
+    if(ST.stamps.filter(Boolean).length===ST.TOTAL){const nLv=getLv(ST.visits);const lvEl=document.getElementById('c-lvup');document.getElementById('c-lvup-name').textContent='Ahora eres '+nLv.n;document.getElementById('c-lvup-perks').innerHTML=nLv.perks.map(p=>`<p style="font-size:11px;color:rgba(248,243,236,.75);line-height:1.7">✓ ${p}</p>`).join('');setTimeout(()=>lvEl.style.display='flex',500);}
+    fbSet('clients/sofia',{visits:ST.visits,level:getLv(ST.visits).n,updatedAt:new Date().toISOString()});
+    document.getElementById('s-vis').textContent=parseInt(document.getElementById('s-vis').textContent)+1;
+  }
+  document.getElementById('b-cname').textContent=cl.n+' · '+cl.id;
+  document.getElementById('b-cvisit').textContent='#'+cl.v+' registrada';
+  document.getElementById('b-clevel').textContent=newLv.n;
+  document.getElementById('b-crem').textContent=Math.max(0,7-(cl.v%7||7))+' sellos';
+  const la=document.getElementById('b-lvup-alert');if(newLv.i>prevLv.i){la.style.display='block';document.getElementById('b-lvup-txt').textContent='Pasó a '+newLv.n;}else la.style.display='none';
+  document.getElementById('b-search').value='';document.getElementById('b-results').innerHTML='';
+  bGoTo('confirm');
+}
+function bSim(){bRegister(JSON.parse(JSON.stringify(BS.clients[Math.floor(Math.random()*BS.clients.length)])));}
+function bSearch(val){const box=document.getElementById('b-results');if(!box)return;if(!val){box.innerHTML='';return;}const m=BS.clients.filter(c=>c.n.toLowerCase().includes(val.toLowerCase()));box.innerHTML=m.map(c=>`<div onclick='bRegister(${JSON.stringify(c)})' style="background:rgba(248,243,236,.07);border-radius:8px;padding:8px 10px;margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:8px"><svg width="18" height="22" viewBox="0 0 100 120" style="color:#8A6A30"><use href="#lapinou"/></svg><div style="flex:1"><p style="font-size:12px;color:var(--cr);font-weight:600">${c.n}</p><p class="ey" style="color:var(--wl);margin-top:1px">${getLv(c.v).n} · ${c.v} visitas</p></div><span style="color:var(--gl);font-size:16px">+</span></div>`).join('');}
+function bRecent(){const box=document.getElementById('b-recent');if(!box)return;if(!BS.recent.length){box.innerHTML='<p style="font-size:11px;color:var(--wg);text-align:center;padding:6px 0">Sin registros aún hoy</p>';return;}box.innerHTML=BS.recent.map(s=>`<div class="srow"><svg width="18" height="22" viewBox="0 0 100 120" style="color:#8A6A30"><use href="#lapinou"/></svg><div style="flex:1"><p style="font-size:12px;color:var(--cr);font-weight:600">${s.n}</p><p class="ey" style="color:var(--wl);margin-top:1px">${getLv(s.v).n}</p></div><div style="text-align:right"><p style="font-size:11px;color:var(--gl)">${s.time}</p><p class="ey" style="color:var(--wl);margin-top:1px">Visita #${s.v}</p></div></div>`).join('');}
+function bNext(){bRecent();bGoTo('scan');}
+
+// ══ ADMIN ══
+function aPin(k){if(k==='clear'){AS.pin=AS.pin.slice(0,-1);}else if(k==='ok'){aCheck();return;}else if(AS.pin.length<4){AS.pin+=k;}aDots();if(AS.pin.length===4)setTimeout(aCheck,150);}
+function aDots(){for(let i=0;i<4;i++){const d=document.getElementById('ad'+i);if(d)d.classList.toggle('on',i<AS.pin.length);}}
+function aCheck(){
+  if(AS.pin===AS.PIN){
+    document.getElementById('a-pin').style.display='none';
+    const m=document.getElementById('a-main');
+    m.style.display='flex';
+    aTab('hoy');
+  } else {
+    const d=document.getElementById('a-dots');
+    d.style.animation='none'; d.offsetHeight; d.style.animation='shk .3s ease';
+    AS.pin=''; aDots();
+  }
+}
+function aLock(){
+  AS.pin=''; aDots();
+  document.getElementById('a-main').style.display='none';
+  const pin=document.getElementById('a-pin');
+  pin.style.display='flex'; pin.style.flexDirection='column';
+}
+function aTab(t){
+  ['hoy','menu','drops','carta','notifs','stats','planeta'].forEach(id=>{
+    const el=document.getElementById('at-'+id);
+    if(el) el.style.display = (id===t) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.atab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  const sc=document.getElementById('a-scroll'); if(sc) sc.scrollTop=0;
+  if(t==='drops') renderDropForms();
+  if(t==='menu')  renderMenuForms();
+  if(t==='carta') renderCartaForms();
+  if(t==='notifs') fillNotifForm();
+  if(t==='hoy')    fillHoyForm();
+  if(t==='planeta') fillPlanetaForm();
+}
+
+// ── Extras del día ──
+function renderExtras(){
+  const box=document.getElementById('a-extras-list');
+  if(!box)return;
+  if(!C.extras||!C.extras.length){box.innerHTML='';return;}
+  box.innerHTML=C.extras.map((it,i)=>`
+    <div class="iform">
+      <button class="irm" onclick="rmExtra(${i})">✕</button>
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <div style="width:50px"><label class="albl">Emoji</label>
+          <input class="afield" id="ex-ico-${i}" value="${it.ico}" style="text-align:center;font-size:16px;padding:6px 2px">
+        </div>
+        <div style="flex:1"><label class="albl">Título</label>
+          <input class="afield" id="ex-tit-${i}" value="${it.tit}" placeholder="Ej. Postre especial" style="font-size:12px">
+        </div>
+      </div>
+      <div style="margin-bottom:6px"><label class="albl">Descripción (opcional)</label>
+        <input class="afield" id="ex-desc-${i}" value="${it.desc}" placeholder="Ej. Tarta tatin con helado de vainilla" style="font-size:12px">
+      </div>
+      <div style="display:flex;gap:6px;align-items:flex-end">
+        <div style="flex:1"><label class="albl">Precio $ (opcional)</label>
+          <input class="afield" id="ex-p-${i}" value="${it.p}" type="number" placeholder="—" style="font-size:12px">
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;padding-bottom:9px">
+          <input type="checkbox" id="ex-ok-${i}" ${it.ok?'checked':''} style="width:15px;height:15px;accent-color:var(--go)">
+          <span style="font-size:10px;color:var(--wg)">Disponible</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function addExtra(){
+  if(!C.extras)C.extras=[];
+  C.extras.push({ico:'✨',tit:'',desc:'',p:'',ok:true});
+  renderExtras();
+  setTimeout(()=>document.getElementById('a-extras-list')?.lastElementChild?.scrollIntoView({behavior:'smooth'}),80);
+}
+function rmExtra(i){
+  C.extras.splice(i,1);
+  renderExtras();
+}
+function collectExtras(){
+  return (C.extras||[]).map((it,i)=>({
+    ico: document.getElementById('ex-ico-'+i)?.value||it.ico,
+    tit: document.getElementById('ex-tit-'+i)?.value||it.tit,
+    desc:document.getElementById('ex-desc-'+i)?.value||it.desc,
+    p:   document.getElementById('ex-p-'+i)?.value||it.p,
+    ok:  document.getElementById('ex-ok-'+i)?.checked??it.ok,
+  })).filter(it=>it.tit);
+}
+
+function fillHoyForm(){const f=id=>document.getElementById(id);if(!f('a-pan-n'))return;f('a-pan-n').value=C.pan.n;f('a-pan-p').value=C.pan.p;f('a-pan-d').checked=C.pan.ok;f('a-caf-n').value=C.cafe.n;f('a-caf-t').value=C.cafe.t;f('a-caf-p').value=C.cafe.p;f('a-sold').value=C.sold.join(', ');renderExtras();}
+
+// Destacados adicionales de Hoy
+const EXTRA_ICONS=['🍰','🥗','🍳','🥐','🍮','🫙','🎉','📢','🌿','🫓'];
+function renderHoyExtraForms(){
+  const box=document.getElementById('a-hoy-extras');if(!box)return;
+  box.innerHTML=C.extras.map((ex,i)=>`
+    <div class="iform">
+      <button class="irm" onclick="rmHoyExtra(${i})">✕</button>
+      <div style="display:flex;gap:6px;margin-bottom:6px;align-items:flex-end">
+        <div style="width:46px"><label class="albl">Ícono</label>
+          <input class="afield" id="ex-ico-${i}" value="${ex.ico}" style="text-align:center;font-size:18px;padding:5px 3px">
+        </div>
+        <div style="flex:1"><label class="albl">Nombre / descripción</label>
+          <input class="afield" id="ex-n-${i}" value="${ex.n}" placeholder="Ej. Tarta de limón · edición especial">
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <div style="flex:1"><label class="albl">Precio $ (opcional)</label>
+          <input class="afield" id="ex-p-${i}" value="${ex.p}" placeholder="85" type="text" style="font-size:12px">
+        </div>
+        <div style="flex:1"><label class="albl">Etiqueta</label>
+          <input class="afield" id="ex-tag-${i}" value="${ex.tag}" placeholder="NUEVO · ESPECIAL · HOY" style="font-size:11px">
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+
+async function saveHoy(){
+  const f=id=>document.getElementById(id);
+  C.pan={n:f('a-pan-n').value||C.pan.n,p:f('a-pan-p').value||C.pan.p,ok:f('a-pan-d').checked};
+  C.cafe={n:f('a-caf-n').value||C.cafe.n,t:f('a-caf-t').value||C.cafe.t,p:f('a-caf-p').value||C.cafe.p};
+  C.sold=(f('a-sold').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  C.extras=collectExtras();
+  renderFeed();
+  await fbSet('content/hoy',{pan:C.pan,cafe:C.cafe,sold:C.sold,extras:C.extras,updatedAt:new Date().toISOString()});
+  flashBtn('a-save-hoy');aToast('¡Feed actualizado!');
+}
+
+
+
+
+
+function renderMenuForms(){const box=document.getElementById('a-menu-forms');if(!box)return;box.innerHTML=C.menuHoy.map((it,i)=>`<div class="iform"><button class="irm" onclick="rmMenuItem(${i})">✕</button><div style="display:flex;gap:6px;margin-bottom:6px"><div style="flex:2"><label class="albl">Nombre</label><input class="afield" id="mi-n-${i}" value="${it.n}" placeholder="Ej. Huevos benedictinos" style="font-size:12px"></div><div style="flex:1"><label class="albl">Precio $</label><input class="afield" id="mi-p-${i}" value="${it.p}" type="number" style="font-size:12px"></div></div><div style="display:flex;gap:6px;align-items:flex-end"><div style="flex:1"><label class="albl">Categoría</label><input class="afield" id="mi-c-${i}" value="${it.cat}" placeholder="🍳 Desayuno" style="font-size:12px"></div><div style="display:flex;align-items:center;gap:5px;padding-bottom:9px"><input type="checkbox" id="mi-ok-${i}" ${it.ok?'checked':''} style="width:15px;height:15px;accent-color:var(--go)"><span style="font-size:10px;color:var(--wg)">Disponible</span></div></div></div>`).join('');}
+function addMenuItem(){C.menuHoy.push({n:'',cat:'🍳 Desayuno',p:'',ok:true});renderMenuForms();setTimeout(()=>document.getElementById('a-menu-forms')?.lastElementChild?.scrollIntoView({behavior:'smooth'}),80);}
+function rmMenuItem(i){C.menuHoy.splice(i,1);renderMenuForms();}
+async function saveMenu(){C.menuHoy=C.menuHoy.map((it,i)=>({n:document.getElementById('mi-n-'+i)?.value||it.n,p:document.getElementById('mi-p-'+i)?.value||it.p,cat:document.getElementById('mi-c-'+i)?.value||it.cat,ok:document.getElementById('mi-ok-'+i)?.checked??it.ok})).filter(it=>it.n);renderMenuHoy();await fbSet('content/hoy',{menuHoy:C.menuHoy,updatedAt:new Date().toISOString()});flashBtn('a-save-menu');aToast('¡Menú del día publicado!');}
+
+function renderDropForms(){const box=document.getElementById('a-dforms');if(!box)return;box.innerHTML=C.drops.map((d,i)=>`<div class="iform"><button class="irm" onclick="rmDrop(${i})">✕</button><div style="display:flex;gap:6px;margin-bottom:6px"><div style="flex:1"><label class="albl">Nombre</label><input class="afield" id="dn-${i}" value="${d.n}" style="font-size:12px"></div><div style="width:46px"><label class="albl">Emoji</label><input class="afield" id="de-${i}" value="${d.e}" style="text-align:center;font-size:16px;padding:6px 3px"></div></div><div style="display:flex;gap:6px;margin-bottom:7px"><div style="flex:1"><label class="albl">Precio $</label><input class="afield" id="dp-${i}" value="${d.p}" type="number" style="font-size:12px"></div><div style="flex:1"><label class="albl">Piezas</label><input class="afield" id="dpc-${i}" value="${d.pc}" type="number" style="font-size:12px"></div><div style="flex:1"><label class="albl">Día</label><input class="afield" id="dd-${i}" value="${d.d}" style="font-size:12px"></div></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:var(--wg)">Activo hoy</span><div class="tog" id="dtog-${i}" style="background:${d.on?'var(--go)':'var(--wl)'}" onclick="tDrop(${i})"><div class="tth" style="left:${d.on?19:3}px"></div></div></div></div>`).join('');}
+function tDrop(i){C.drops[i].on=!C.drops[i].on;const tog=document.getElementById('dtog-'+i);if(!tog)return;tog.querySelector('.tth').style.left=C.drops[i].on?'19px':'3px';tog.style.background=C.drops[i].on?'var(--go)':'var(--wl)';}
+function rmDrop(i){C.drops.splice(i,1);renderDropForms();}
+function addDrop(){C.drops.push({n:'',e:'🥐',p:'',pc:'20',d:'Próximamente',on:false});renderDropForms();setTimeout(()=>document.getElementById('a-dforms')?.lastElementChild?.scrollIntoView({behavior:'smooth'}),80);}
+async function saveDrops(){C.drops=C.drops.map((d,i)=>({n:document.getElementById('dn-'+i)?.value||d.n,e:document.getElementById('de-'+i)?.value||d.e,p:document.getElementById('dp-'+i)?.value||d.p,pc:document.getElementById('dpc-'+i)?.value||d.pc,d:document.getElementById('dd-'+i)?.value||d.d,on:d.on})).filter(d=>d.n);renderDropsList();renderHomeDropMain();renderNotifBanner();await fbSet('content/drops',{list:C.drops,updatedAt:new Date().toISOString()});flashBtn('a-save-drops');aToast('¡Drops actualizados!');}
+
+function renderCartaForms(){const box=document.getElementById('a-carta-forms');if(!box)return;const cats={};C.carta.forEach((it,i)=>{if(!cats[it.cat])cats[it.cat]=[];cats[it.cat].push({...it,_i:i});});let html='';Object.entries(cats).forEach(([cat,items])=>{html+=`<div style="margin-bottom:10px"><div class="cat-badge" style="margin-bottom:6px">${cat}</div>`;items.forEach(it=>{const i=it._i;html+=`<div class="iform" style="margin-bottom:6px"><button class="irm" onclick="rmCartaItem(${i})">✕</button><div style="display:flex;gap:6px;margin-bottom:6px"><div style="flex:2"><label class="albl">Nombre</label><input class="afield" id="ca-n-${i}" value="${it.n}" style="font-size:12px"></div><div style="flex:1"><label class="albl">Precio $</label><input class="afield" id="ca-p-${i}" value="${it.p}" type="number" style="font-size:12px"></div></div><div><label class="albl">Categoría</label><input class="afield" id="ca-c-${i}" value="${it.cat}" style="font-size:12px"></div></div>`;});html+='</div>';});box.innerHTML=html||'<p style="font-size:11px;color:var(--wl);text-align:center;padding:10px">Sin ítems aún. Agrega uno arriba.</p>';}
+function addCartaItem(){C.carta.push({n:'',cat:'☕ Cafés',p:''});renderCartaForms();setTimeout(()=>document.getElementById('a-carta-forms')?.lastElementChild?.scrollIntoView({behavior:'smooth'}),80);}
+function rmCartaItem(i){C.carta.splice(i,1);renderCartaForms();}
+async function saveCarta(){C.carta=C.carta.map((it,i)=>({n:document.getElementById('ca-n-'+i)?.value||it.n,p:document.getElementById('ca-p-'+i)?.value||it.p,cat:document.getElementById('ca-c-'+i)?.value||it.cat})).filter(it=>it.n);renderCarta();await fbSet('content/carta',{items:C.carta,updatedAt:new Date().toISOString()});flashBtn('a-save-carta');aToast('¡Carta actualizada!');}
+
+function fillNotifForm(){const el=document.getElementById('a-notif-msg');if(el)el.value=C.notif;const pt=document.getElementById('a-prev-txt');if(pt)pt.textContent=C.notif;const a=C.drops.find(d=>d.on);const pi=document.getElementById('a-prev-ico');if(pi&&a)pi.textContent=a.e;}
+function buildNotif(){const a=C.drops.find(d=>d.on);if(!a){aToast('No hay drop activo');return;}const msg=`Quedan ${a.pc} ${a.n.toLowerCase()}s — early access vence en 1 hora`;document.getElementById('a-notif-msg').value=msg;document.getElementById('a-prev-txt').textContent=msg;C.notif=msg;}
+async function saveNotif(){C.notif=document.getElementById('a-notif-msg').value;renderNotifBanner();await fbSet('content/hoy',{notif:C.notif,updatedAt:new Date().toISOString()});flashBtn('a-save-notif');aToast('¡Alerta publicada!');}
+
+let atT=null;
+function aToast(msg){const t=document.getElementById('a-toast');if(!t)return;t.textContent='✓ '+msg;t.style.display='block';t.style.opacity='1';if(atT)clearTimeout(atT);atT=setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.style.display='none',300);},2200);}
+function flashBtn(id){const b=document.getElementById(id);if(!b)return;const orig=b.textContent;b.textContent='¡Guardado!';b.style.background='var(--gn)';setTimeout(()=>{b.textContent=orig;b.style.background='var(--go)';},1600);}
+function togClick(el){const th=el.querySelector('.tth');const on=th.style.left==='19px';th.style.left=on?'3px':'19px';el.style.background=on?'var(--wl)':'var(--go)';}
+
+function setFecha(){const d=new Date();const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];const el=document.getElementById('c-fecha');if(el)el.textContent=`${dias[d.getDay()]} ${d.getDate()} ${meses[d.getMonth()]}`;}
+
+// ══ INIT ══
+setFecha();
+renderStamps();
+renderAll();
+initFirebase();
+</script>
+</body>
+</html>
