@@ -35,7 +35,7 @@ body{
 .sl{color:var(--ch)}.sd{color:var(--cr)}
 
 /* Scroll */
-.scroll{flex:1;overflow-y:auto;overflow-x:hidden}.scroll::-webkit-scrollbar{display:none}
+.scroll{overflow-y:auto;overflow-x:hidden}.scroll::-webkit-scrollbar{display:none}
 
 /* Bottom nav */
 .bnav{display:flex;justify-content:space-around;padding:8px 0 18px;background:var(--wh);border-top:1px solid var(--iv);flex-shrink:0}
@@ -43,7 +43,7 @@ body{
 .nlbl{font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;transition:color .15s}
 
 /* Screens */
-.scr{display:none}.scr.on{display:flex;flex-direction:column;flex:1;overflow-y:auto;overflow-x:hidden}
+.scr{display:none;min-height:0}.scr.on{display:block;flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 
 /* Type */
 .serif{font-family:'Cormorant Garamond',serif}
