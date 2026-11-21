@@ -314,6 +314,51 @@
           "appendAttribution": false
         }
       }
+    },
+    {
+      "name": "Aviso por WhatsApp (plantilla)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2860,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "O09EV4TkUIcdTCT4",
+          "name": "Unnamed credential"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/<TWILIO_ACCOUNT_SID>/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "whatsapp:+5212222934153"
+            },
+            {
+              "name": "From",
+              "value": "whatsapp:+16187406602"
+            },
+            {
+              "name": "ContentSid",
+              "value": "HXc34af9c3286451039efa315d41407239"
+            },
+            {
+              "name": "ContentVariables",
+              "value": "={{ JSON.stringify({ '1': $json.ayerTexto }) }}"
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -443,6 +488,11 @@
         [
           {
             "node": "Enviar por correo (temporal)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aviso por WhatsApp (plantilla)",
             "type": "main",
             "index": 0
           }

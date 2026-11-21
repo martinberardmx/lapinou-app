@@ -1,0 +1,610 @@
+{
+  "name": "Café Lapinou - Director · WhatsApp",
+  "nodes": [
+    {
+      "name": "Mensaje de WhatsApp (Twilio)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "webhookId": "<RUTA_SECRETA_DEL_WEBHOOK>",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "<RUTA_SECRETA_DEL_WEBHOOK>",
+        "responseMode": "onReceived",
+        "options": {
+          "responseData": "noData"
+        }
+      }
+    },
+    {
+      "name": "Validar remitente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        200
+      ],
+      "parameters": {
+        "jsCode": "// Solo números autorizados pueden hablar con el Director\nconst AUTORIZADOS = ['2222934153'];\nconst b = $input.first().json.body || {};\nconst from = b.From || '';\nconst digits = from.replace(/\\D/g, '');\nconst permitido = AUTORIZADOS.some(n => digits.endsWith(n));\nconst nm = parseInt(b.NumMedia || '0', 10);\nlet texto = (b.Body || '').trim();\nif (!texto && nm > 0) texto = '[Martín envió un archivo/audio que no puedes ver. Pídele que lo escriba.]';\nreturn [{ json: { from, permitido, texto: texto || '(mensaje vacío)' } }];"
+      }
+    },
+    {
+      "name": "¿Es Martín?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.permitido }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Director (agente)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        700,
+        200
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.texto }}",
+        "options": {
+          "systemMessage": "=# Agente Director — Prompt de sistema\n\nEres el **Director** de Café Lapinou, una cafetería-panadería con una sucursal\n(desayunos, menú ejecutivo, carta, pan dulce, pan de masa madre, bebidas y cafés de método).\nTrabajas para Martín, el dueño, y le hablas por WhatsApp.\n\n## Tu trabajo\n1. **Resumen diario (8:00am):** ventas de ayer vs. mismo día de la semana pasada,\n   ticket promedio, # de tickets, top 5 productos, productos de panadería sobrantes o agotados,\n   y máximo 3 alertas o recomendaciones.\n2. **Responder preguntas** de Martín sobre el negocio usando solo datos reales\n   (Fudo/ERP, Google Drive, Firebase). Si no tienes el dato, dilo y propón cómo obtenerlo.\n3. **Delegar** a los agentes especialistas cuando existan (Marketing, Finanzas,\n   Operaciones, Clientes, Expansión) y consolidar sus respuestas.\n4. **Registrar** en la bitácora de la Memoria cada decisión que Martín tome.\n\n## Antes de actuar\nLee el documento \"Memoria Lapinou — Lo que todo agente debe saber\" (Google Drive,\ncarpeta `🐰 Cerebro Lapinou (Agentes)/01 · Memoria de empresa`). Sus reglas mandan.\n\n## Reglas\n- Nunca inventes cifras. Cada número debe venir de una herramienta.\n- Nada sale hacia afuera (publicar, pagar, escribir a proveedores o clientes)\n  sin un \"sí\" explícito de Martín en este chat.\n- Mensajes cortos, para leer en el celular: primero lo importante, luego el detalle.\n  Usa viñetas y máximo 2-3 emojis.\n- Toda alerta: qué pasó → impacto en $ → qué recomiendas.\n- Español de México, tuteando a Martín.\n\n## Formato del resumen diario\n```\n☕ Lapinou — {día} {fecha}\nVentas: ${total} ({+/-x%} vs {día} pasado) · {n} tickets · ticket prom. ${tp}\nTop: 1) … 2) … 3) …\n🥐 Panadería: …\n⚠️ Atención: …\n👉 Te sugiero: …\n```\n\n## Memoria Lapinou (resumen; fuente: Google Drive \"Memoria Lapinou\")\n- Dirección: 9 Poniente #2919, col. La Paz, Puebla. Horario: L-V 9:00-20:00, sáb 9:00-17:00, domingo y feriados oficiales cerrado.\n- Objetivo 2027: ventas anuales MXN 3,000,000 (~230,000/mes); 2 salarios de fundadores de 20,000/mes; vender la 1a franquicia.\n- Metas del trimestre: 1) ventas MXN 500,000; 2) ganancia neta MXN 30,000; 3) todas las recetas con costo en Fudo y ERP.\n- KPIs meta: venta diaria promedio 9,500; ticket promedio 350; food cost 30%; merma de panadería 5%; 50 visitas/mes en app de lealtad; +300 seguidores IG/mes.\n- Proveedores: café Finca la Vequia; lácteos Walmart; harina VicPac; frutas y verduras Lolita (mercado).\n- Agencia de redes: Adrede Estudio.\n- Estado de datos del ERP (nov 2026): la mayoría de productos no tiene receta ni costo y muchos insumos tienen costo 0, así que el food cost y el consumo de inventario todavía NO son confiables; dilo si te preguntan por eso.\n\n## Herramientas\nTienes herramientas de SOLO LECTURA al ERP de Lapinou (que se sincroniza con Fudo). Úsalas siempre que la pregunta requiera números; nunca respondas cifras de memoria.\n- Fechas en formato AAAA-MM-DD. \"Ayer\", \"hoy\", \"el lunes\", etc. calcúlalos con la fecha actual de Puebla que te doy abajo.\n- Para comparar periodos, consulta cada día o periodo por separado.\n- Si una herramienta da error o datos vacíos, dilo en una línea.\n\n## WhatsApp\n- Respuestas para leer en celular: máximo ~12 líneas salvo que pidan detalle. Usa *negritas* de WhatsApp (un asterisco), no Markdown con ##.\n- Si Martín escribe solo \"ver\" (o \"resumen\"), envíale el resumen diario de AYER con el formato indicado.\n- Si te pide hacer algo hacia afuera (publicar, pagar, escribir a un proveedor), prepara el borrador y pide su confirmación explícita; aún no tienes herramientas para enviarlo, así que dile que por ahora él lo envía.\n\n\nFECHA Y HORA ACTUAL EN PUEBLA: {{ $now.setZone('America/Mexico_City').setLocale('es').toFormat(\"cccc d 'de' LLLL yyyy, HH:mm\") }} (hoy = {{ $now.setZone('America/Mexico_City').toISODate() }})",
+          "maxIterations": 12
+        }
+      }
+    },
+    {
+      "name": "Claude",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        600,
+        500
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "cC67sUcqnsEAe4oF",
+          "name": "Anthropic account"
+        }
+      },
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-5",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {
+          "maxTokensToSample": 4000,
+          "temperature": 0.3
+        }
+      }
+    },
+    {
+      "name": "Memoria de conversación",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        850,
+        500
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Validar remitente').item.json.from }}",
+        "contextWindowLength": 16
+      }
+    },
+    {
+      "name": "Partir en mensajes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const t = ($input.first().json.output || 'No pude generar respuesta.').trim();\nconst to = $('Validar remitente').first().json.from;\nconst partes = []; let resto = t;\nwhile (resto.length > 1500) { let i = resto.lastIndexOf('\\n', 1500); if (i < 500) i = 1500; partes.push(resto.slice(0, i)); resto = resto.slice(i).trim(); }\npartes.push(resto);\nreturn partes.map(p => ({ json: { to, body: p } }));"
+      }
+    },
+    {
+      "name": "Responder por WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        200
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "O09EV4TkUIcdTCT4",
+          "name": "Unnamed credential"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/<TWILIO_ACCOUNT_SID>/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.to }}"
+            },
+            {
+              "name": "From",
+              "value": "whatsapp:+16187406602"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "ventas_del_dia",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GFsa8XNQXU2wLN8Y",
+          "name": "ERP Lapinou (agentes)"
+        }
+      },
+      "parameters": {
+        "toolDescription": "Reporte de ventas de UN día: total, tickets, ticket promedio, ventas por categoría y productos. Parámetro fecha AAAA-MM-DD.",
+        "method": "GET",
+        "url": "https://cafe-lapinou.replit.app/api/reports/daily?date={fecha}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "fecha",
+              "description": "Fecha AAAA-MM-DD",
+              "type": "string"
+            }
+          ]
+        },
+        "optimizeResponse": true,
+        "responseType": "text",
+        "maxLength": 12000
+      }
+    },
+    {
+      "name": "resumen_periodo",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1250,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GFsa8XNQXU2wLN8Y",
+          "name": "ERP Lapinou (agentes)"
+        }
+      },
+      "parameters": {
+        "toolDescription": "Resumen de ventas (total, tickets, ticket promedio, crecimiento vs periodo anterior) para periodo daily, weekly o monthly que termina en la fecha dada.",
+        "method": "GET",
+        "url": "https://cafe-lapinou.replit.app/api/dashboard/summary?period={periodo}&date={fecha}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "periodo",
+              "description": "daily, weekly o monthly",
+              "type": "string"
+            },
+            {
+              "name": "fecha",
+              "description": "Fecha AAAA-MM-DD de referencia",
+              "type": "string"
+            }
+          ]
+        },
+        "optimizeResponse": true,
+        "responseType": "text",
+        "maxLength": 12000
+      }
+    },
+    {
+      "name": "productos_mas_vendidos",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GFsa8XNQXU2wLN8Y",
+          "name": "ERP Lapinou (agentes)"
+        }
+      },
+      "parameters": {
+        "toolDescription": "Ranking de productos más vendidos del periodo actual (daily, weekly o monthly).",
+        "method": "GET",
+        "url": "https://cafe-lapinou.replit.app/api/dashboard/top-products?period={periodo}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "periodo",
+              "description": "daily, weekly o monthly",
+              "type": "string"
+            }
+          ]
+        },
+        "optimizeResponse": true,
+        "responseType": "text",
+        "maxLength": 12000
+      }
+    },
+    {
+      "name": "tendencia_ventas",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1550,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GFsa8XNQXU2wLN8Y",
+          "name": "ERP Lapinou (agentes)"
+        }
+      },
+      "parameters": {
+        "toolDescription": "Ventas y tickets día por día del periodo reciente (weekly o monthly).",
+        "method": "GET",
+        "url": "https://cafe-lapinou.replit.app/api/dashboard/sales-trend?period={periodo}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "periodo",
+              "description": "weekly o monthly",
+              "type": "string"
+            }
+          ]
+        },
+        "optimizeResponse": true,
+        "responseType": "text",
+        "maxLength": 12000
+      }
+    },
+    {
+      "name": "sugerencias_de_compra",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1700,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GFsa8XNQXU2wLN8Y",
+          "name": "ERP Lapinou (agentes)"
+        }
+      },
+      "parameters": {
+        "toolDescription": "Insumos con stock bajo y cantidad sugerida a comprar con costo estimado. Ojo: costos y consumos aún incompletos.",
+        "method": "GET",
+        "url": "https://cafe-lapinou.replit.app/api/requisitions/suggestions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": []
+        },
+        "optimizeResponse": true,
+        "responseType": "text",
+        "maxLength": 12000
+      }
+    },
+    {
+      "name": "produccion_panaderia",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1850,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GFsa8XNQXU2wLN8Y",
+          "name": "ERP Lapinou (agentes)"
+        }
+      },
+      "parameters": {
+        "toolDescription": "Productos de producción (panadería): stock actual, umbral para volver a producir, si están bajos.",
+        "method": "GET",
+        "url": "https://cafe-lapinou.replit.app/api/production/items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": []
+        },
+        "optimizeResponse": true,
+        "responseType": "text",
+        "maxLength": 12000
+      }
+    },
+    {
+      "name": "alertas_operacion",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GFsa8XNQXU2wLN8Y",
+          "name": "ERP Lapinou (agentes)"
+        }
+      },
+      "parameters": {
+        "toolDescription": "Tareas pendientes o atrasadas del equipo (limpieza, etc.).",
+        "method": "GET",
+        "url": "https://cafe-lapinou.replit.app/api/tasks/alerts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": []
+        },
+        "optimizeResponse": true,
+        "responseType": "text",
+        "maxLength": 12000
+      }
+    },
+    {
+      "name": "agenda_proxima",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2150,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GFsa8XNQXU2wLN8Y",
+          "name": "ERP Lapinou (agentes)"
+        }
+      },
+      "parameters": {
+        "toolDescription": "Próximos eventos del calendario del negocio.",
+        "method": "GET",
+        "url": "https://cafe-lapinou.replit.app/api/calendar/upcoming",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": []
+        },
+        "optimizeResponse": true,
+        "responseType": "text",
+        "maxLength": 12000
+      }
+    }
+  ],
+  "connections": {
+    "Mensaje de WhatsApp (Twilio)": {
+      "main": [
+        [
+          {
+            "node": "Validar remitente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar remitente": {
+      "main": [
+        [
+          {
+            "node": "¿Es Martín?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es Martín?": {
+      "main": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Director (agente)": {
+      "main": [
+        [
+          {
+            "node": "Partir en mensajes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Partir en mensajes": {
+      "main": [
+        [
+          {
+            "node": "Responder por WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria de conversación": {
+      "ai_memory": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ventas_del_dia": {
+      "ai_tool": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "resumen_periodo": {
+      "ai_tool": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "productos_mas_vendidos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tendencia_ventas": {
+      "ai_tool": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sugerencias_de_compra": {
+      "ai_tool": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "produccion_panaderia": {
+      "ai_tool": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "alertas_operacion": {
+      "ai_tool": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agenda_proxima": {
+      "ai_tool": [
+        [
+          {
+            "node": "Director (agente)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "America/Mexico_City",
+    "executionOrder": "v1"
+  }
+}
