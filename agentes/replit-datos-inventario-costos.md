@@ -46,25 +46,35 @@ Cada sincronización con Fudo avisa "276 ingredientes de Fudo sin vincular al in
    y reimporta los gastos afectados sin duplicarlos.
 ```
 
-## Parte 3 — Recetas y costo por producto (food cost)
+## Parte 3 — Recetas y costo por producto (food cost) — FUENTE: FUDO
+
+Decisión (2026-11-22): las recetas, fichas técnicas y costos de ingredientes se capturan
+SOLO en Fudo. El ERP los lee; no se capturan dos veces. En Fudo cada producto tiene
+receta con ingrediente, cantidad neta, merma, cantidad bruta y costo (ej. Capuccino francés
+= $15.25), y las sub-recetas están en "Fichas técnicas".
 
 ```
-1. Primero revisa si la API de Fudo expone recetas de productos (ingredientes y cantidades
-   por producto). Si sí, impórtalas y vincúlalas a los insumos del ERP.
-2. Si no, permite importar recetas desde una hoja de Google Sheets / CSV con columnas:
-   Producto, Ingrediente, Cantidad, Unidad. (Martín está llenando la hoja
-   "Recetas Lapinou — Top 25" en Google Drive.)
-3. Calcula el costo de cada producto = suma(cantidad × costo unitario del insumo),
-   convirtiendo unidades (g↔kg, ml↔L, pieza).
-4. Calcula el recipeCost de las 23 recetas de producción (panadería) igual, y que el
-   costo de una sub-receta (ej. biga, masa madre) se use dentro de otras recetas.
-5. Al importar ventas de Fudo, descuenta del inventario los insumos según la receta
-   (consumo teórico) y registra el movimiento.
-6. Agrega al rol `agent` (llave de agentes, solo GET) estas rutas:
+Antes de cambiar código, respóndeme:
+1. ¿La sincronización con Fudo importa hoy recetas (ingredientes y cantidades por producto)
+   y el costo de cada ingrediente? Muéstrame qué campos de la API de Fudo lees.
+2. ¿La API de Fudo expone las recetas de productos, las fichas técnicas y el costo de
+   ingredientes? Haz una consulta de prueba al producto "Capuccino francés"
+   (en Fudo su receta suma $15.25) y muéstrame la respuesta.
+
+Si la API sí las expone:
+3. Haz que la sincronización importe recetas, fichas técnicas (sub-recetas) y costos de
+   ingredientes desde Fudo como fuente de verdad; usa la cantidad BRUTA para el costo
+   y el consumo. Vincula cada ingrediente de Fudo con su insumo del inventario (Parte 1).
+4. No sobrescribas las 17 recetas capturadas a mano en el ERP sin mostrarme antes la
+   diferencia contra Fudo.
+5. Al importar ventas, descuenta inventario según la receta (consumo teórico).
+6. Agrega al rol `agent` (llave de agentes, solo GET):
    - GET /api/reports/food-cost?startDate=&endDate=  → venta, costo teórico y % por
      producto y por categoría, y lista de productos vendidos sin receta.
-   - GET /api/data-quality → los conteos de la tabla del diagnóstico, para que
-     los agentes sigan el avance.
+   - GET /api/data-quality → conteos del diagnóstico para seguir el avance.
+
+Si la API NO las expone: dímelo y propón la alternativa (por ejemplo, exportación de
+Fudo a Excel/CSV que se suba a Google Drive y el ERP importe).
 ```
 
 ## Parte 4 — Merma de panadería
