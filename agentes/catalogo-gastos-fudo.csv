@@ -1,0 +1,48 @@
+Acción en Fudo,Categoría principal (grupo),Subcategoría,Categoría financiera en Fudo,Línea en Estado de Resultados (ERP),Ejemplos / reglas
+RENOMBRAR "Gastos de barra",Insumos,Insumos de barra,Compra de mercadería,Costo de ventas,"Café, leche, jarabes, hielo, polvos, tés. Registrar SIEMPRE con líneas de ingrediente para que sume stock y costo"
+RENOMBRAR "Gastos de cocina",Insumos,Insumos de cocina,Compra de mercadería,Costo de ventas,"Carne, verdura, quesos, harina, huevo. Registrar SIEMPRE con líneas de ingrediente"
+CREAR,Insumos,Empaques y desechables,Compra de mercadería,Costo de ventas,"Vasos, tapas, bolsas, domos, cucharas, servilletas"
+CREAR (grupo),Insumos,,Compra de mercadería,Costo de ventas,Categoría principal de las 3 anteriores
+CREAR (grupo),Nómina,,Gastos operacionales,Nómina,
+CREAR,Nómina,Sueldos equipo,Gastos operacionales,Nómina,"Baristas, cocina, panadería, piso"
+CREAR,Nómina,Sueldos fundadores,Gastos administrativos,Sueldos de dirección,Para medir la meta de 2 sueldos de 20 000
+CREAR,Nómina,IMSS e INFONAVIT,Gastos operacionales,Nómina,Cuotas patronales
+CREAR,Nómina,Impuesto sobre nómina (Puebla),Gastos operacionales,Nómina,Impuesto estatal sobre nóminas
+CREAR,Nómina,Prestaciones,Gastos operacionales,Nómina,"Aguinaldo, vacaciones, prima vacacional, PTU"
+CREAR,Nómina,Uniformes y capacitación,Gastos operacionales,Nómina,
+CREAR (grupo),Ocupación,,Gastos operacionales,Ocupación,
+MOVER "Renta" dentro de Ocupación,Ocupación,Renta,Gastos operacionales,Ocupación,
+MOVER "Gastos operativos: local" y renombrar,Ocupación,Mantenimiento del local,Gastos operacionales,Ocupación,"Plomería, pintura, reparaciones del local"
+CREAR,Ocupación,Predial y derechos,Gastos administrativos,Ocupación,
+RENOMBRAR "Energía",Servicios,,Gastos operacionales,Servicios,
+CREAR,Servicios,Luz,Gastos operacionales,Servicios,CFE
+CREAR,Servicios,Gas,Gastos operacionales,Servicios,
+CREAR,Servicios,Agua,Gastos operacionales,Servicios,Agua de la red (no garrafones: esos son insumo)
+CREAR,Servicios,Internet y teléfono,Gastos operacionales,Servicios,
+CREAR (grupo),Operación,,Gastos operacionales,Operación,
+MOVER "Productos de limpieza" dentro de Operación,Operación,Productos de limpieza,Gastos operacionales,Operación,"Fibras, jabón, bactericida, cafiza, bolsas de basura"
+CREAR,Operación,Utensilios y equipo menor,Gastos operacionales,Operación,"Jarras, moldes, cuchillos (cosas baratas que no son inversión)"
+RENOMBRAR "Maquinaria",Operación,Mantenimiento de maquinaria,Gastos operacionales,Operación,Reparación y servicio de cafetera/molino/hornos. COMPRAR una máquina va en Inversión en equipo
+CREAR,Operación,Fumigación,Gastos operacionales,Operación,
+CREAR (grupo),Marketing,,Gastos operacionales,Marketing,
+CREAR,Marketing,Agencia de redes,Gastos operacionales,Marketing,Adrede Estudio
+CREAR,Marketing,Publicidad pagada,Gastos operacionales,Marketing,Meta Ads
+CREAR,Marketing,Impresos y diseño,Gastos operacionales,Marketing,
+CREAR,Marketing,Degustaciones y promociones,Gastos operacionales,Marketing,
+MANTENER "Gastos administrativos" como grupo,Gastos administrativos,,Gastos administrativos,Administración,
+CREAR,Gastos administrativos,Contador,Gastos administrativos,Administración,
+CREAR,Gastos administrativos,Software y suscripciones,Gastos administrativos,Administración,"Fudo, Replit, n8n, Twilio, Claude, Google, Squarespace"
+CREAR,Gastos administrativos,Comisiones bancarias y de terminal,Gastos administrativos,Administración,"Mercado Pago, comisiones de bancos"
+CREAR,Gastos administrativos,Seguros,Gastos administrativos,Administración,
+CREAR,Gastos administrativos,Trámites licencias y legal,Gastos administrativos,Administración,
+CREAR,Gastos administrativos,Papelería,Gastos administrativos,Administración,
+CREAR (grupo),Impuestos y financieros,,(dejar vacío),Debajo de la utilidad operativa,Fudo no tiene opción para esto: el ERP lo clasifica por nombre
+CREAR,Impuestos y financieros,ISR (pagos provisionales),(dejar vacío),Impuestos sobre la utilidad,
+CREAR,Impuestos y financieros,Intereses de préstamos,(dejar vacío),Gastos financieros,
+CREAR (grupo),No es gasto (balance y flujo),,(dejar vacío),NO va al Estado de Resultados,Solo flujo de efectivo y balance
+CREAR,No es gasto (balance y flujo),Inversión en equipo y mobiliario,(dejar vacío),Activo fijo,"Compra de cafetera, horno, mobiliario"
+CREAR,No es gasto (balance y flujo),Pago de capital de préstamos,(dejar vacío),Pasivo,Solo el capital; los intereses van en Intereses de préstamos
+CREAR,No es gasto (balance y flujo),IVA pagado al SAT,(dejar vacío),Impuestos por pagar,El IVA no es gasto
+CREAR,No es gasto (balance y flujo),Retiros y dividendos a socios,(dejar vacío),Capital,
+CREAR,No es gasto (balance y flujo),Depósitos en garantía,(dejar vacío),Activo,
+CREAR,No es gasto (balance y flujo),Traspasos entre cuentas,(dejar vacío),Ninguna (movimiento interno),"Banco ↔ caja ↔ Mercado Pago"
