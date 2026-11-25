@@ -2,7 +2,7 @@
   "name": "Café Lapinou - Director · Resumen diario",
   "nodes": [
     {
-      "name": "Cada día 8:00am",
+      "name": "Lun-Sáb 8:00am",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
@@ -13,12 +13,13 @@
         "rule": {
           "interval": [
             {
-              "field": "days",
-              "triggerAtHour": 8
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-6"
             }
           ]
         }
-      }
+      },
+      "id": "8c2647fd-fe45-44ce-b788-1e4a9eb83d46"
     },
     {
       "name": "Probar ahora",
@@ -28,7 +29,8 @@
         0,
         200
       ],
-      "parameters": {}
+      "parameters": {},
+      "id": "615fac67-5814-4df3-bcb8-945715de0ef0"
     },
     {
       "name": "Fechas",
@@ -39,18 +41,21 @@
         100
       ],
       "parameters": {
-        "jsCode": "const now = $now.setZone('America/Mexico_City');\nconst ayer = now.minus({days:1});\nconst semPasada = ayer.minus({days:7});\nreturn [{json:{ayer: ayer.toISODate(), ayerTexto: ayer.setLocale('es').toFormat(\"cccc d 'de' LLLL\"), semPasada: semPasada.toISODate(), inicio30: ayer.minus({days:29}).toISODate()}}];"
-      }
+        "jsCode": "const now = $now.setZone('America/Mexico_City');\n// Lunes: reporta el sábado (domingo cerrado)\nlet ayer = now.minus({days:1});\nif (ayer.weekday === 7) ayer = ayer.minus({days:1});\nconst semPasada = ayer.minus({days:7});\nreturn [{json:{ayer: ayer.toISODate(), ayerTexto: ayer.setLocale('es').toFormat(\"cccc d 'de' LLLL\"), semPasada: semPasada.toISODate(), semPasadaTexto: semPasada.setLocale('es').toFormat(\"cccc d 'de' LLLL\"), inicio30: ayer.minus({days:29}).toISODate()}}];"
+      },
+      "id": "a9f2eed3-2833-4268-aa1b-2bbc29ee5577"
     },
     {
       "name": "ERP · Reporte de ayer",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
       "position": [
         440,
         100
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "=https://cafe-lapinou.replit.app/api/reports/daily?date={{ $('Fechas').first().json.ayer }}",
@@ -67,21 +72,22 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "GFsa8XNQXU2wLN8Y",
-          "name": "Header Auth account 2"
+          "name": "ERP Lapinou (agentes)"
         }
       },
-      "executeOnce": true,
-      "alwaysOutputData": true
+      "id": "081228f2-780d-48bc-93a3-cc4a673dd058"
     },
     {
       "name": "ERP · Mismo día semana pasada",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
       "position": [
         660,
         100
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "=https://cafe-lapinou.replit.app/api/reports/daily?date={{ $('Fechas').first().json.semPasada }}",
@@ -98,21 +104,22 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "GFsa8XNQXU2wLN8Y",
-          "name": "Header Auth account 2"
+          "name": "ERP Lapinou (agentes)"
         }
       },
-      "executeOnce": true,
-      "alwaysOutputData": true
+      "id": "34dfc757-46ff-42e0-866e-60702ea6016d"
     },
     {
       "name": "ERP · Tendencia semanal",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
       "position": [
         1100,
         100
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "=https://cafe-lapinou.replit.app/api/dashboard/sales-trend?period=weekly",
@@ -129,21 +136,22 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "GFsa8XNQXU2wLN8Y",
-          "name": "Header Auth account 2"
+          "name": "ERP Lapinou (agentes)"
         }
       },
-      "executeOnce": true,
-      "alwaysOutputData": true
+      "id": "53acb7bd-dde1-4625-aedb-f86d37b07b65"
     },
     {
       "name": "ERP · Sugerencias de compra",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
       "position": [
         1320,
         100
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "=https://cafe-lapinou.replit.app/api/requisitions/suggestions",
@@ -160,21 +168,22 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "GFsa8XNQXU2wLN8Y",
-          "name": "Header Auth account 2"
+          "name": "ERP Lapinou (agentes)"
         }
       },
-      "executeOnce": true,
-      "alwaysOutputData": true
+      "id": "ac087dfe-8a45-45fb-bb12-51ba275dd0d3"
     },
     {
       "name": "ERP · Alertas de tareas y calidad",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
       "position": [
         1760,
         100
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "=https://cafe-lapinou.replit.app/api/tasks/alerts",
@@ -191,21 +200,22 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "GFsa8XNQXU2wLN8Y",
-          "name": "Header Auth account 2"
+          "name": "ERP Lapinou (agentes)"
         }
       },
-      "executeOnce": true,
-      "alwaysOutputData": true
+      "id": "01c5d88a-f573-4842-aec1-1436a6d12043"
     },
     {
       "name": "ERP · Agenda próxima",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
       "position": [
         1980,
         100
       ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "=https://cafe-lapinou.replit.app/api/calendar/upcoming",
@@ -222,24 +232,24 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "GFsa8XNQXU2wLN8Y",
-          "name": "Header Auth account 2"
+          "name": "ERP Lapinou (agentes)"
         }
       },
-      "executeOnce": true,
-      "alwaysOutputData": true
+      "id": "531b66d3-b204-4380-893e-7d386c7c6e51"
     },
     {
       "name": "Armar datos para el Director",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
+      "executeOnce": true,
       "position": [
         2200,
         100
       ],
       "parameters": {
-        "jsCode": "const get = (n) => { try { return JSON.stringify($(n).all().map(i => i.json).filter(j => Object.keys(j).length)).slice(0, 6000); } catch (e) { return 'SIN DATOS'; } };\nconst f = $('Fechas').first().json;\nconst datos = [\n  'REPORTE DE AYER (' + f.ayer + '): ' + get('ERP · Reporte de ayer'),\n  'MISMO DÍA SEMANA PASADA (' + f.semPasada + '): ' + get('ERP · Mismo día semana pasada'),\n  'TENDENCIA ÚLTIMOS DÍAS: ' + get('ERP · Tendencia semanal'),\n  'SUGERENCIAS DE COMPRA: ' + get('ERP · Sugerencias de compra'),\n  'ALERTAS DE TAREAS: ' + get('ERP · Alertas de tareas y calidad'),\n  'AGENDA PRÓXIMA: ' + get('ERP · Agenda próxima'),\n].join('\\n\\n');\nreturn [{json:{ datos, ayerTexto: f.ayerTexto }}];"
+        "jsCode": "const get = (n) => { try { return JSON.stringify($(n).all().map(i => i.json).filter(j => Object.keys(j).length)).slice(0, 6000); } catch (e) { return 'SIN DATOS'; } };\nconst f = $('Fechas').first().json;\nconst datos = [\n  'REPORTE DE AYER (' + f.ayer + '): ' + get('ERP · Reporte de ayer'),\n  'MISMO DÍA SEMANA PASADA (' + f.semPasada + '): ' + get('ERP · Mismo día semana pasada'),\n  'TENDENCIA ÚLTIMOS DÍAS: ' + get('ERP · Tendencia semanal'),\n  'SUGERENCIAS DE COMPRA: ' + get('ERP · Sugerencias de compra'),\n  'ALERTAS DE TAREAS: ' + get('ERP · Alertas de tareas y calidad'),\n  'AGENDA PRÓXIMA: ' + get('ERP · Agenda próxima'),\n].join('\\n\\n');\nreturn [{json:{ datos: 'DÍA DEL REPORTE: ' + f.ayerTexto + ' (' + f.ayer + '). COMPARACIÓN: ' + f.semPasadaTexto + ' (' + f.semPasada + '). Usa exactamente estos nombres de día.\\n\\n' + datos, ayerTexto: f.ayerTexto }}];"
       },
-      "executeOnce": true
+      "id": "1e8d5933-bfb4-49be-bb55-238b00937bf2"
     },
     {
       "name": "Claude · Director",
@@ -249,12 +259,6 @@
         2420,
         100
       ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "947RSpdja86mnSuX",
-          "name": "Header Auth account"
-        }
-      },
       "parameters": {
         "method": "POST",
         "url": "https://api.anthropic.com/v1/messages",
@@ -277,7 +281,14 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 8000, system: \"# Agente Director \\u2014 Prompt de sistema\\n\\nEres el **Director** de Caf\\u00e9 Lapinou, una cafeter\\u00eda-panader\\u00eda con una sucursal\\n(desayunos, men\\u00fa ejecutivo, carta, pan dulce, pan de masa madre, bebidas y caf\\u00e9s de m\\u00e9todo).\\nTrabajas para Mart\\u00edn, el due\\u00f1o, y le hablas por WhatsApp.\\n\\n## Tu trabajo\\n1. **Resumen diario (8:00am):** ventas de ayer vs. mismo d\\u00eda de la semana pasada,\\n   ticket promedio, # de tickets, top 5 productos, productos de panader\\u00eda sobrantes o agotados,\\n   y m\\u00e1ximo 3 alertas o recomendaciones.\\n2. **Responder preguntas** de Mart\\u00edn sobre el negocio usando solo datos reales\\n   (Fudo/ERP, Google Drive, Firebase). Si no tienes el dato, dilo y prop\\u00f3n c\\u00f3mo obtenerlo.\\n3. **Delegar** a los agentes especialistas cuando existan (Marketing, Finanzas,\\n   Operaciones, Clientes, Expansi\\u00f3n) y consolidar sus respuestas.\\n4. **Registrar** en la bit\\u00e1cora de la Memoria cada decisi\\u00f3n que Mart\\u00edn tome.\\n\\n## Antes de actuar\\nLee el documento \\\"Memoria Lapinou \\u2014 Lo que todo agente debe saber\\\" (Google Drive,\\ncarpeta `\\ud83d\\udc30 Cerebro Lapinou (Agentes)/01 \\u00b7 Memoria de empresa`). Sus reglas mandan.\\n\\n## Reglas\\n- Nunca inventes cifras. Cada n\\u00famero debe venir de una herramienta.\\n- Nada sale hacia afuera (publicar, pagar, escribir a proveedores o clientes)\\n  sin un \\\"s\\u00ed\\\" expl\\u00edcito de Mart\\u00edn en este chat.\\n- Mensajes cortos, para leer en el celular: primero lo importante, luego el detalle.\\n  Usa vi\\u00f1etas y m\\u00e1ximo 2-3 emojis.\\n- Toda alerta: qu\\u00e9 pas\\u00f3 \\u2192 impacto en $ \\u2192 qu\\u00e9 recomiendas.\\n- Espa\\u00f1ol de M\\u00e9xico, tuteando a Mart\\u00edn.\\n\\n## Formato del resumen diario\\n```\\n\\u2615 Lapinou \\u2014 {d\\u00eda} {fecha}\\nVentas: ${total} ({+/-x%} vs {d\\u00eda} pasado) \\u00b7 {n} tickets \\u00b7 ticket prom. ${tp}\\nTop: 1) \\u2026 2) \\u2026 3) \\u2026\\n\\ud83e\\udd50 Panader\\u00eda: \\u2026\\n\\u26a0\\ufe0f Atenci\\u00f3n: \\u2026\\n\\ud83d\\udc49 Te sugiero: \\u2026\\n```\\n\" + '\\n\\nCafé Lapinou está en Puebla. Si un dato dice SIN DATOS o trae un error, no lo inventes: dilo en una línea.', messages: [{ role: 'user', content: 'Prepara el resumen diario de ' + $json.ayerTexto + ' con estos datos del ERP:\\n\\n' + $json.datos }] }) }}",
         "options": {}
-      }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "947RSpdja86mnSuX",
+          "name": "Header Auth account"
+        }
+      },
+      "id": "5fc7004f-a130-4a14-ad4f-1e66962a65cb"
     },
     {
       "name": "Extraer resumen",
@@ -289,7 +300,8 @@
       ],
       "parameters": {
         "jsCode": "const r = $input.first().json;\nconst texto = (r.content || []).filter(c => c.type === 'text').map(c => c.text).join('\\n') || ('Error de Claude: ' + JSON.stringify(r).slice(0, 500));\nreturn [{json:{ texto, ayerTexto: $('Armar datos para el Director').first().json.ayerTexto }}];"
-      }
+      },
+      "id": "5be9f309-11ee-4a33-866a-decb67d5a00c"
     },
     {
       "name": "Enviar por correo (temporal)",
@@ -299,12 +311,6 @@
         2860,
         100
       ],
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "5XmJ311yhVLJZ7Lf",
-          "name": "Gmail account"
-        }
-      },
       "parameters": {
         "sendTo": "cafelapinou@gmail.com",
         "subject": "=☕ Resumen Lapinou — {{ $json.ayerTexto }}",
@@ -313,23 +319,25 @@
         "options": {
           "appendAttribution": false
         }
-      }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5XmJ311yhVLJZ7Lf",
+          "name": "Gmail account"
+        }
+      },
+      "id": "02379e25-0459-45c9-bd8f-61c188d6b5f4",
+      "webhookId": "12d259e1-cd59-4888-8c92-240ddebf7f3e"
     },
     {
       "name": "Aviso por WhatsApp (plantilla)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "onError": "continueRegularOutput",
       "position": [
         2860,
         300
       ],
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "httpBasicAuth": {
-          "id": "O09EV4TkUIcdTCT4",
-          "name": "Unnamed credential"
-        }
-      },
       "parameters": {
         "method": "POST",
         "url": "https://api.twilio.com/2010-04-01/Accounts/<TWILIO_ACCOUNT_SID>/Messages.json",
@@ -358,21 +366,17 @@
           ]
         },
         "options": {}
-      }
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "O09EV4TkUIcdTCT4",
+          "name": "Unnamed credential"
+        }
+      },
+      "id": "919b279e-0a4b-427c-9b6d-8fca47c4b87e"
     }
   ],
   "connections": {
-    "Cada día 8:00am": {
-      "main": [
-        [
-          {
-            "node": "Fechas",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Probar ahora": {
       "main": [
         [
@@ -493,6 +497,17 @@
           },
           {
             "node": "Aviso por WhatsApp (plantilla)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lun-Sáb 8:00am": {
+      "main": [
+        [
+          {
+            "node": "Fechas",
             "type": "main",
             "index": 0
           }
