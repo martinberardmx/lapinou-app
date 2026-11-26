@@ -1,0 +1,581 @@
+{
+  "name": "Café Lapinou - Asistente WhatsApp (Claude)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Antes de usar este workflow\n\n1. Crea una credencial **Header Auth** llamada \"Claude API\" con:\n   - Name: `x-api-key`\n   - Value: tu API key de console.anthropic.com\n   Asígnala en el nodo \"Claude API\".\n\n2. Crea una credencial **Basic Auth** llamada \"Twilio\" con:\n   - User: tu Account SID de Twilio\n   - Password: tu Auth Token de Twilio\n   Asígnala en el nodo \"Enviar respuesta (Twilio)\".\n\n3. En el nodo \"Enviar respuesta (Twilio)\", reemplaza `TU_ACCOUNT_SID_AQUI` en la URL por tu Account SID real, y `TU_NUMERO_TWILIO_AQUI` en el body por tu número de WhatsApp de Twilio (sandbox: +14155238886, o tu número ya aprobado).\n\n4. Copia la URL del nodo \"Webhook\" (botón 'Listen for Test Event' o la URL de producción) y pégala en Twilio: WhatsApp Sandbox Settings → 'When a message comes in'.",
+        "height": 460,
+        "width": 420
+      },
+      "id": "0804f474-2b51-4d3d-810b-1cffd469b302",
+      "name": "Instrucciones",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-lapinou",
+        "options": {}
+      },
+      "id": "79a22f2d-c8f7-4cd5-b9a6-bca110c84af1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        352
+      ],
+      "webhookId": "whatsapp-lapinou"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"claude-haiku-4-5-20251001\",\n  max_tokens: 300,\n  system: $json.systemPrompt + \"\\n\\nFECHA Y HORA ACTUAL EN PUEBLA: \" + $now.setZone('America/Mexico_City').setLocale('es').toFormat(\"cccc d 'de' LLLL yyyy, HH:mm\") + \"\\n\\nMENÚ DEL DÍA (menú ejecutivo de hoy):\\n\" + $('Armar menú del día').first().json.menuText + \"\\n\\nLISTA DE PRECIOS Y DISPONIBILIDAD ACTUAL (usa solo estos datos; si un producto no está aquí, ofrece confirmarlo con el equipo):\\n\" + $('Armar lista de precios').first().json.priceList,\n  messages: $('Cargar historial').first().json.messages\n}) }}",
+        "options": {}
+      },
+      "id": "4e05181a-4dbe-426c-9e02-64a669ba4c22",
+      "name": "Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        352
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "947RSpdja86mnSuX",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sp1",
+              "name": "systemPrompt",
+              "type": "string",
+              "value": "Eres el asistente virtual de Café Lapinou, una café-boulangerie de estilo francés en Puebla, México. Respondes mensajes de Instagram y WhatsApp en nombre del equipo.\n\nTONO:\n- Cálido, cercano y breve (1-2 frases por respuesta, como lo hace el equipo real)\n- Español por defecto, salvo que el cliente escriba en otro idioma\n- Máximo un emoji por mensaje\n- Empieza con \"¡Hola!\" o \"Hola buenos días/tardes\" según la hora\n\nINFORMACIÓN CONFIRMADA:\n- Dirección: 9 Poniente #2919, esquina con calle Chietla, colonia La Paz, 72160 Puebla, Puebla. Ubicación: https://maps.app.goo.gl/WoZyS8f7gZyGs6hk6\n- Horarios: lunes a viernes de 9 am a 8 pm, sábados de 9 am a 5 pm, domingos cerrado\n- Días feriados OFICIALES (o feriados por ley) en México: estamos cerrados. Los feriados en 2026 son 16 de noviembre, 25 de diciembre. En 2027 son 01 de enero, 01 de febrero, 15 de marzo, 01 de mayo, 16 de septiembre, 15 de noviembre, 25 de diciembre.\n- Servicio de comida: el menú de desayuno se sirve de 9:00 am a 12:30 pm. De 12:30 pm hasta el cierre se sirve la carta de comida (sándwiches, etc.). Si te preguntan por un platillo y no sabes a qué horario pertenece, confírmalo con el equipo.\n- WiFi gratuito disponible en el local\n- No contamos con servicio ni zonas de entrega a domicilio por el momento\n- Métodos de pago aceptados: efectivo, tarjeta de débito y crédito, American Express, Tarjetas Sí Vale\n- WhatsApp Business: 221 644 4004 (este mismo número). También activos en Facebook, Instagram, TikTok y Threads\n- La lista de precios actualizada está cargada por separado en la base de conocimiento de n8n — consúltala siempre ahí antes de responder sobre precios\n- El menú del día y el stock de croissants geométricos cambian diariamente: consulta siempre la hoja/base de disponibilidad del día antes de responder sobre disponibilidad\n\nREGLAS ESTRICTAS:\n1. Nunca inventes un precio, horario o disponibilidad que no esté confirmado en la base de conocimiento o en la hoja del día\n2. Si no tienes la información, dilo con naturalidad y ofrece transferir con el equipo: \"Déjame confirmarte eso con el equipo, en un momento te contestamos 😊\"\n3. Transfiere SIEMPRE a un humano (sin intentar responder tú mismo) cuando se trate de:\n   - Pedidos para eventos, bodas o cantidades grandes\n   - Cotizaciones o pedidos personalizados\n   - Preguntas sobre alergias o ingredientes (SIEMPRE escalar, sin excepción)\n   - Quejas o solicitudes de reembolso\n   - Propuestas de colaboración, prensa o negocios\n   - Cualquier mensaje ambiguo o fuera de estos temas\n4. Para reservas/apartados: pregunta el nombre para anotar el pedido, la hora deseada, y si es para llevar o para consumir en el local\n5. Para solicitudes de empleo: responde \"Gracias por comunicarte con nosotros. Nos puedes enviar tu CV. ¿Para qué área estás buscando?\" y transfiere el CV recibido al equipo de contratación\n6. No prometas fechas u horas de entrega sin verificar el stock del día\n7. Cuando des horarios, incluye SIEMPRE la hora de apertura y la de cierre: lunes a viernes de 9 am a 8 pm, sábados de 9 am a 5 pm, domingos cerrado. Si preguntan por un día concreto, da la apertura y el cierre de ese día.\n8. Cada vez que transfieras o debas transferir al equipo (reglas 2, 3 y 5, reservas y cotizaciones), termina tu mensaje con la marca exacta [[EQUIPO]]. El cliente no la verá: el sistema la quita y avisa al equipo. No uses la marca en ningún otro caso.\n9. Cuando transfieras al equipo, avisa al cliente en una frase que Martin, del equipo de Café Lapinou, le escribirá en breve por WhatsApp desde otro número, y que es un mensaje nuestro. Ejemplo: \"Martin, del equipo de Café Lapinou, te escribirá en breve desde otro número de WhatsApp; es de nosotros 😊\". No des ese otro número.\n10. Si preguntan por el menú del día o el menú ejecutivo, usa solo la sección MENÚ DEL DÍA que aparece más abajo, si existe y es de hoy. Si no aparece o no es de hoy, no lo inventes: di que lo confirmas con el equipo y termina con [[EQUIPO]].\n11. Usa la FECHA Y HORA ACTUAL que aparece más abajo para saber si ya es horario de desayuno o de comida, y si el local está abierto o cerrado en este momento.\n\nSi el mensaje es una reacción a una historia o un mensaje sin contenido claro (like, emoji suelto), no generes una respuesta automática — dejar pasar o notificar al equipo según corresponda.\nSi te preguntan si abrimos un día específico y ese día es un feriado ofiacial en México, contesta que estamos cerrados porque es un día feriado, no porque es domingo."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d767fea-2042-4b04-93b1-840ffc8ad8f9",
+      "name": "Prompt del sistema",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const claudeResponse = $input.first().json;\nconst raw = claudeResponse.content && claudeResponse.content[0] ? claudeResponse.content[0].text : 'Gracias por tu mensaje, en breve te contestamos 😊 [[EQUIPO]]';\nconst escalate = raw.includes('[[EQUIPO]]');\nconst replyText = raw.split('[[EQUIPO]]').join('').trim();\nconst wb = $('Webhook').item.json.body;\nconst from = wb.From;\nconst nm = parseInt(wb.NumMedia || '0', 10);\nconst type = wb.MediaContentType0 || '';\nconst mediaUrl = nm > 0 ? (wb.MediaUrl0 || '') : '';\nconst kind = type.startsWith('audio') ? 'un audio' : type.startsWith('image') ? 'una foto' : type.startsWith('video') ? 'un video' : 'un archivo';\nconst customerMessage = (wb.Body || '') + (nm > 0 ? ` [el cliente envió ${kind}]` : '');\n\nconst sd = $getWorkflowStaticData('global');\nsd.hist = sd.hist || {};\nconst now = Date.now();\nsd.hist[from] = (sd.hist[from] || []).concat([\n  { role: 'user', content: customerMessage.trim() || '(mensaje vacío)', t: now },\n  { role: 'assistant', content: replyText, t: now }\n]).slice(-10);\n\nreturn [{ json: { replyText, to: from, escalate: escalate || nm > 0, customerMessage: customerMessage.trim(), customerNumber: from, mediaUrl } }];"
+      },
+      "id": "7b02cf3f-5712-454f-9285-433e8d947af8",
+      "name": "Extraer respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/<TWILIO_ACCOUNT_SID>/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.to }}"
+            },
+            {
+              "name": "From",
+              "value": "whatsapp:+5212216444004"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.replyText }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0b01e4c8-2682-4c76-a67a-66643303d925",
+      "name": "Enviar respuesta (Twilio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1136,
+        352
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "O09EV4TkUIcdTCT4",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1K68PR_Jkp6ysJAEmyXktt_OFCjKLkYMj5AV5-Kh7ZdY"
+        },
+        "sheetName": {
+          "__rl": true,
+          "cachedResultName": "Untitled",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K68PR_Jkp6ysJAEmyXktt_OFCjKLkYMj5AV5-Kh7ZdY/edit#gid=1164776307",
+          "mode": "list",
+          "value": 1164776307
+        },
+        "options": {}
+      },
+      "id": "f92d6b49-adc7-4d49-a724-515c5551b3a0",
+      "name": "Leer precios (Google Sheets)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        560
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8aeu7OnQpseadRZn",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst lines = rows.filter(r => r['Producto']).map(r => {\n  const note = r['Notas'] && !/confirmar|ilegible|aparece a/i.test(r['Notas']) ? ' — ' + r['Notas'] : '';\n  return `- ${r['Producto']} (${r['Categoría']}): $${r['Precio (MXN)']} MXN — Disponible hoy: ${r['Disponible hoy (Sí/No)']}${note}`;\n});\nreturn [{ json: { priceList: lines.join('\\n') } }];"
+      },
+      "id": "6683ac65-f8e1-458e-bd70-f9c5886c85e8",
+      "name": "Armar lista de precios",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $('Extraer respuesta').item.json.escalate }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              },
+              "rightValue": ""
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          }
+        },
+        "options": {}
+      },
+      "id": "d849ff10-5d5c-4cdd-a371-0f85404d51ad",
+      "name": "¿Requiere al equipo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "cafelapinou@gmail.com",
+        "subject": "=Café Lapinou bot: un cliente necesita al equipo ({{ $('Extraer respuesta').item.json.customerNumber }})",
+        "emailType": "text",
+        "message": "=Un cliente escribió y el bot lo pasó al equipo.\n\nCliente: {{ $('Extraer respuesta').item.json.customerNumber }}\nMensaje del cliente: {{ $('Extraer respuesta').item.json.customerMessage }}\n{{ $('Extraer respuesta').item.json.mediaUrl ? 'Adjunto (no se pudo adjuntar; ábrelo con usuario = Account SID y contraseña = Auth Token de Twilio): ' + $('Extraer respuesta').item.json.mediaUrl : '' }}\n\nRespuesta que ya recibió el cliente: {{ $('Extraer respuesta').item.json.replyText }}\n\nPara responderle desde tu WhatsApp personal, toca este enlace (abre el chat con un saludo ya escrito):\nhttps://wa.me/{{ $('Extraer respuesta').item.json.customerNumber.replace(/\\D/g, '') }}?text={{ encodeURIComponent('Hola, soy Martin de Café Lapinou. Le escribo por su mensaje: ') }}\n\nResponde al cliente lo antes posible.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "532bd245-b4c8-44d3-a0a0-9a97e0604239",
+      "name": "Alerta al equipo (correo)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1600,
+        288
+      ],
+      "webhookId": "503da7bf-441d-48e5-b825-ca83be476f39",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5XmJ311yhVLJZ7Lf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nsd.hist = sd.hist || {};\nconst wb = $('Webhook').item.json.body;\nconst from = wb.From;\nconst original = wb.Body || '';\nconst nm = parseInt(wb.NumMedia || '0', 10);\nconst type = wb.MediaContentType0 || '';\nconst now = Date.now();\nconst TTL = 6 * 3600 * 1000;\n\nlet body = original;\nif (nm > 0) {\n  const kind = type.startsWith('audio') ? 'un audio' : type.startsWith('image') ? 'una foto' : type.startsWith('video') ? 'un video' : 'un archivo';\n  body = (original ? original + '\\n' : '') + `[SISTEMA: el cliente envió ${kind}, que no puedes ver ni escuchar. Responde breve y amable, dile que el equipo lo revisará y que, si puede, también lo escriba. Termina con la marca [[EQUIPO]].]`;\n}\n\nfor (const k of Object.keys(sd.hist)) {\n  sd.hist[k] = sd.hist[k].filter(m => now - m.t < TTL);\n  if (sd.hist[k].length === 0) delete sd.hist[k];\n}\n\nconst past = (sd.hist[from] || []).slice(-8).map(m => ({ role: m.role, content: m.content }));\nconst all = past.concat([{ role: 'user', content: body || '(mensaje vacío)' }]);\nwhile (all.length && all[0].role !== 'user') all.shift();\nconst messages = [];\nfor (const m of all) {\n  const last = messages[messages.length - 1];\n  if (last && last.role === m.role) last.content += '\\n' + m.content;\n  else messages.push({ role: m.role, content: m.content });\n}\nreturn [{ json: { messages } }];"
+      },
+      "id": "dde8c594-02f8-424b-b69a-d37e88cde2fa",
+      "name": "Cargar historial",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1K68PR_Jkp6ysJAEmyXktt_OFCjKLkYMj5AV5-Kh7ZdY"
+        },
+        "sheetName": {
+          "__rl": true,
+          "cachedResultName": "Menú del día",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K68PR_Jkp6ysJAEmyXktt_OFCjKLkYMj5AV5-Kh7ZdY/edit#gid=146075366",
+          "mode": "list",
+          "value": 146075366
+        },
+        "options": {}
+      },
+      "id": "5bb67c6b-0412-4e17-9643-15aa655c2cce",
+      "name": "Leer menú del día",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        720
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8aeu7OnQpseadRZn",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));\nconst today = [now.getFullYear(), now.getMonth() + 1, now.getDate()];\n\nfunction toYMD(v) {\n  if (v === undefined || v === null || v === '') return null;\n  const s = String(v).trim();\n  if (/^\\d+(\\.\\d+)?$/.test(s)) {\n    const dt = new Date(Math.round((Number(s) - 25569) * 86400000));\n    return [dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate()];\n  }\n  let a = s.match(/^(\\d{1,2})[\\/\\-.](\\d{1,2})[\\/\\-.](\\d{2,4})$/);\n  if (a) { let y = +a[3]; if (y < 100) y += 2000; return [y, +a[2], +a[1]]; }\n  a = s.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})/);\n  if (a) return [+a[1], +a[2], +a[3]];\n  return null;\n}\nconst norm = (k) => k.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();\nfunction get(r, name) {\n  const k = Object.keys(r).find(x => norm(x) === name);\n  return k ? r[k] : '';\n}\n\nconst todays = rows.filter(r => {\n  const d = toYMD(get(r, 'fecha'));\n  return d && d[0] === today[0] && d[1] === today[1] && d[2] === today[2] && String(get(r, 'platillo')).trim();\n});\n\nconst lines = todays.map(r => {\n  const sec = String(get(r, 'seccion')).trim();\n  const dish = String(get(r, 'platillo')).trim();\n  const note = String(get(r, 'notas')).trim();\n  const soldOut = String(get(r, 'disponible hoy')).trim().toLowerCase() === 'no';\n  return '- ' + (sec ? sec + ': ' : '') + dish + (note ? ' (' + note + ')' : '') + (soldOut ? ' [AGOTADO HOY]' : '');\n});\n\nconst menuText = lines.length\n  ? lines.join('\\n')\n  : '(No hay menú del día cargado para hoy: no lo inventes, confírmalo con el equipo.)';\nreturn [{ json: { menuText, filasHoy: lines.length } }];"
+      },
+      "id": "e9f9f2f9-8261-4faf-b780-18d51f4c40e0",
+      "name": "Armar menú del día",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        720
+      ]
+    },
+    {
+      "name": "¿Trae archivo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        488
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "m1",
+              "leftValue": "={{ $('Extraer respuesta').item.json.mediaUrl }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Descargar archivo (Twilio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        488
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "O09EV4TkUIcdTCT4",
+          "name": "Unnamed credential"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Extraer respuesta').item.json.mediaUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "adjunto"
+            }
+          },
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 5
+            }
+          }
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "cafelapinou@gmail.com",
+        "subject": "=Café Lapinou bot: un cliente necesita al equipo 📎 ({{ $('Extraer respuesta').item.json.customerNumber }})",
+        "emailType": "text",
+        "message": "=Un cliente escribió y el bot lo pasó al equipo.\n\nCliente: {{ $('Extraer respuesta').item.json.customerNumber }}\nMensaje del cliente: {{ $('Extraer respuesta').item.json.customerMessage }}\n📎 El cliente envió un archivo: viene ADJUNTO en este correo.\n\nRespuesta que ya recibió el cliente: {{ $('Extraer respuesta').item.json.replyText }}\n\nPara responderle desde tu WhatsApp personal, toca este enlace (abre el chat con un saludo ya escrito):\nhttps://wa.me/{{ $('Extraer respuesta').item.json.customerNumber.replace(/\\D/g, '') }}?text={{ encodeURIComponent('Hola, soy Martin de Café Lapinou. Le escribo por su mensaje: ') }}\n\nResponde al cliente lo antes posible.",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "adjunto"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Alerta con adjunto (correo)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2040,
+        488
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5XmJ311yhVLJZ7Lf",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Prompt del sistema": {
+      "main": [
+        [
+          {
+            "node": "Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude API": {
+      "main": [
+        [
+          {
+            "node": "Extraer respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer respuesta": {
+      "main": [
+        [
+          {
+            "node": "Enviar respuesta (Twilio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Leer precios (Google Sheets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer precios (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Armar lista de precios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar respuesta (Twilio)": {
+      "main": [
+        [
+          {
+            "node": "¿Requiere al equipo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Requiere al equipo?": {
+      "main": [
+        [
+          {
+            "node": "¿Trae archivo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cargar historial": {
+      "main": [
+        [
+          {
+            "node": "Prompt del sistema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar lista de precios": {
+      "main": [
+        [
+          {
+            "node": "Leer menú del día",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer menú del día": {
+      "main": [
+        [
+          {
+            "node": "Armar menú del día",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar menú del día": {
+      "main": [
+        [
+          {
+            "node": "Cargar historial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Trae archivo?": {
+      "main": [
+        [
+          {
+            "node": "Descargar archivo (Twilio)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alerta al equipo (correo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar archivo (Twilio)": {
+      "main": [
+        [
+          {
+            "node": "Alerta con adjunto (correo)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alerta al equipo (correo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  }
+}
